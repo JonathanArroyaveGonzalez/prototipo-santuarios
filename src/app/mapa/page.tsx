@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import type { Lugar } from "@/types";
-import { mapIcons } from "@/components/maps/map-icons";
+import { createMapIcons } from "@/components/maps/map-icons";
 import { useLanguage } from "@/lib/language-context";
 
 const MapContainer = dynamic(
@@ -26,12 +26,18 @@ const Popup = dynamic(
 export default function MapaPage() {
   const [lugares, setLugares] = useState<Lugar[]>([]);
   const [tipoFilter, setTipoFilter] = useState("");
+  const [mapIcons, setMapIcons] = useState<any>(null);
   const { t } = useLanguage();
 
   useEffect(() => {
     fetch("/api/lugares")
       .then((r) => r.json())
       .then(setLugares);
+    
+    // Create map icons only on client-side
+    if (typeof window !== "undefined") {
+      setMapIcons(createMapIcons());
+    }
   }, []);
 
   const filteredLugares = tipoFilter
@@ -71,7 +77,7 @@ export default function MapaPage() {
         </section>
 
         <section className="mt-8 surface-panel rounded-2xl p-2 h-[600px]">
-          {typeof window !== "undefined" && (
+          {typeof window !== "undefined" && mapIcons && (
             <MapContainer
               center={[5.54127, -74.99313]}
               zoom={10}
