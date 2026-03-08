@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model consentimientos {
+  id                 Int      @id @default(autoincrement())
+  victima_id         Int
+  firmante_nombre    String   @db.VarChar(100)
+  firmante_documento String   @db.VarChar(50)
+  relacion_victima   String   @db.VarChar(50)
+  archivo_url        String?  @db.VarChar(500)
+  victimas           victimas @relation(fields: [victima_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model eventos {
+  id                 Int       @id @default(autoincrement())
+  medio_id           Int
+  fecha_inicio       DateTime  @db.Timestamptz(6)
+  fecha_fin          DateTime? @db.Timestamptz(6)
+  titulo             String    @db.VarChar(200)
+  descripcion        String?
+  categoria          String    @db.VarChar(50)
+  ubicacion_tipo     String?   @db.VarChar(20)
+  ubicacion_detalles Json?     @db.Json
+  medios             medios    @relation(fields: [medio_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model lugares {
+  id          Int           @id @default(autoincrement())
+  nombre      String        @db.VarChar(200)
+  tipo        String        @db.VarChar(50)
+  latitud     Decimal       @db.Decimal(10, 8)
+  longitud    Decimal       @db.Decimal(11, 8)
+  testimonios testimonios[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model medios {
+  id             Int           @id @default(autoincrement())
+  usuario_id     Int
+  tipo           String        @db.VarChar(20)
+  nombre_archivo String        @db.VarChar(255)
+  url            String        @db.VarChar(500)
+  eventos        eventos[]
+  usuarios       usuarios      @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  testimonios    testimonios[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model testimonios {
+  id           Int      @id @default(autoincrement())
+  victima_id   Int
+  lugar_id     Int
+  medio_id     Int
+  tipo         String   @db.VarChar(20)
+  autor_nombre String   @db.VarChar(100)
+  autor_rol    String?  @db.VarChar(50)
+  lugares      lugares  @relation(fields: [lugar_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  medios       medios   @relation(fields: [medio_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  victimas     victimas @relation(fields: [victima_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model usuarios {
+  id            Int        @id @default(autoincrement())
+  nombre        String     @db.VarChar(100)
+  email         String     @unique @db.VarChar(255)
+  hash_password String     @db.VarChar(255)
+  rol           String     @db.VarChar(20)
+  medios        medios[]
+  victimas      victimas[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model victimas {
+  id                 Int               @id @default(autoincrement())
+  usuario_id         Int
+  nombres            String            @db.VarChar(100)
+  apellidos          String            @db.VarChar(100)
+  fecha_nacimiento   DateTime?         @db.Date
+  fecha_desaparicion DateTime          @db.Date
+  edad_desaparicion  Int?
+  departamento       String            @db.VarChar(50)
+  municipio          String            @db.VarChar(50)
+  estado_busqueda    String            @db.VarChar(20)
+  consentimientos    consentimientos[]
+  testimonios        testimonios[]
+  usuarios           usuarios          @relation(fields: [usuario_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
