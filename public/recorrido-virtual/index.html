@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Santuarios de la Memoria — Recorrido Digital 3D</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Sora:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --brand: #124a63;
+    --brand-strong: #0a3147;
+    --accent: #9f3f2f;
+    --bg: #f3eee5;
+    --surface: #fffaf3;
+    --gold: #c9a96e;
+    --candle: #ffb347;
+    --flower: #e87c6b;
+  }
+
+  body {
+    background: #0a0a0f;
+    font-family: 'Sora', sans-serif;
+    overflow: hidden;
+    color: white;
+    cursor: none;
+  }
+
+  #cursor {
+    position: fixed;
+    width: 18px; height: 18px;
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s, background 0.2s;
+    mix-blend-mode: difference;
+  }
+  #cursor.hovering { transform: translate(-50%, -50%) scale(2.5); background: rgba(201,169,110,0.2); }
+
+  canvas { display: block; }
+
+  /* PANTALLA DE BIENVENIDA */
+  #intro {
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, #060c14 0%, #0a1e2c 50%, #0d0a08 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 100;
+    transition: opacity 1.5s ease;
+  }
+  #intro.fade-out { opacity: 0; pointer-events: none; }
+
+  .intro-particles {
+    position: absolute; inset: 0;
+    overflow: hidden;
+  }
+  .particle {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: drift linear infinite;
+    opacity: 0;
+  }
+  @keyframes drift {
+    0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+    10% { opacity: 0.6; }
+    90% { opacity: 0.3; }
+    100% { transform: translateY(-10vh) translateX(var(--drift)); opacity: 0; }
+  }
+
+  .intro-content {
+    position: relative;
+    text-align: center;
+    max-width: 640px;
+    padding: 2rem;
+  }
+
+  .intro-eyebrow {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.35em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 1s 0.5s forwards;
+  }
+
+  .intro-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    font-weight: 300;
+    line-height: 1.15;
+    color: var(--bg);
+    margin-bottom: 0.5rem;
+    opacity: 0;
+    animation: fadeUp 1s 0.8s forwards;
+  }
+  .intro-title em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  .intro-sub {
+    font-size: 0.9rem;
+    color: rgba(243,238,229,0.55);
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    animation: fadeUp 1s 1.1s forwards;
+  }
+
+  .intro-divider {
+    width: 60px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 1.5rem auto;
+    opacity: 0;
+    animation: fadeUp 1s 1s forwards;
+  }
+
+  .btn-enter {
+    display: inline-flex;
+    align-items: center; gap: 0.75rem;
+    padding: 0.9rem 2.2rem;
+    border: 1px solid var(--gold);
+    background: transparent;
+    color: var(--gold);
+    font-family: 'Sora', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: all 0.4s;
+    opacity: 0;
+    animation: fadeUp 1s 1.4s forwards;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-enter::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--gold);
+    transform: translateX(-100%);
+    transition: transform 0.4s;
+    z-index: -1;
+  }
+  .btn-enter:hover::before { transform: translateX(0); }
+  .btn-enter:hover { color: #0a1e2c; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* CONTROLES EN ESCENA */
+  #hud {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0;
+    transition: opacity 1s 0.5s;
+  }
+  #hud.visible { opacity: 1; }
+
+  .hud-header {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%);
+  }
+
+  .hud-logo {
+    font-family: 'Fraunces', serif;
+    font-size: 1rem;
+    font-weight: 300;
+    color: var(--bg);
+    letter-spacing: 0.05em;
+  }
+  .hud-logo span { color: var(--gold); }
+
+  .hud-nav {
+    display: flex; gap: 0.5rem;
+    pointer-events: all;
+  }
+
+  .hud-btn {
+    padding: 0.45rem 1rem;
+    border: 1px solid rgba(201,169,110,0.4);
+    background: rgba(10,17,28,0.6);
+    color: rgba(243,238,229,0.8);
+    font-family: 'Sora', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: all 0.3s;
+    backdrop-filter: blur(8px);
+  }
+  .hud-btn:hover, .hud-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(201,169,110,0.1); }
+
+  /* PANEL LATERAL - VÍCTIMA SELECCIONADA */
+  #victim-panel {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 340px;
+    background: linear-gradient(135deg, rgba(10,17,28,0.92) 0%, rgba(18,74,99,0.85) 100%);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid rgba(201,169,110,0.2);
+    padding: 6rem 2rem 2rem;
+    transform: translateX(100%);
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: all;
+    overflow-y: auto;
+  }
+  #victim-panel.open { transform: translateX(0); }
+
+  .panel-close {
+    position: absolute;
+    top: 5rem; right: 1.5rem;
+    background: none; border: none;
+    color: rgba(243,238,229,0.5);
+    font-size: 1.4rem;
+    cursor: none;
+    transition: color 0.2s;
+    line-height: 1;
+  }
+  .panel-close:hover { color: var(--gold); }
+
+  .victim-photo {
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--gold);
+    margin-bottom: 1rem;
+    filter: sepia(20%);
+  }
+
+  .victim-photo-placeholder {
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+    border: 2px solid var(--gold);
+    margin-bottom: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-size: 2rem;
+    color: var(--gold);
+  }
+
+  .victim-name {
+    font-family: 'Fraunces', serif;
+    font-size: 1.35rem;
+    font-weight: 300;
+    color: var(--bg);
+    margin-bottom: 0.2rem;
+  }
+
+  .victim-dates {
+    font-size: 0.72rem;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+  }
+
+  .victim-bio {
+    font-size: 0.8rem;
+    line-height: 1.75;
+    color: rgba(243,238,229,0.65);
+    margin-bottom: 1.5rem;
+  }
+
+  .offerings-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .offerings-title::after { content: ''; flex: 1; height: 1px; background: rgba(201,169,110,0.3); }
+
+  .offering-btns {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .offering-btn {
+    padding: 0.75rem;
+    border: 1px solid rgba(201,169,110,0.3);
+    background: rgba(255,255,255,0.03);
+    color: rgba(243,238,229,0.7);
+    font-family: 'Sora', sans-serif;
+    font-size: 0.7rem;
+    cursor: none;
+    transition: all 0.3s;
+    text-align: center;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 0.35rem;
+  }
+  .offering-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(201,169,110,0.08); }
+  .offering-btn.placed { border-color: var(--accent); color: var(--accent); }
+
+  .offering-icon { font-size: 1.5rem; }
+
+  .offerings-count {
+    font-size: 0.7rem;
+    color: rgba(243,238,229,0.4);
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .message-area {
+    margin-bottom: 1.5rem;
+  }
+  .message-area label {
+    display: block;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+  }
+  .message-area textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(201,169,110,0.2);
+    color: rgba(243,238,229,0.8);
+    font-family: 'Sora', sans-serif;
+    font-size: 0.75rem;
+    padding: 0.75rem;
+    resize: none;
+    height: 80px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .message-area textarea:focus { border-color: rgba(201,169,110,0.5); }
+  .message-area textarea::placeholder { color: rgba(243,238,229,0.25); }
+
+  .btn-tribute {
+    width: 100%;
+    padding: 0.9rem;
+    background: linear-gradient(135deg, var(--accent), #7a2f22);
+    border: none;
+    color: white;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: none;
+    transition: opacity 0.3s;
+  }
+  .btn-tribute:hover { opacity: 0.85; }
+
+  /* CONTROLES DE NAVEGACIÓN */
+  #nav-controls {
+    position: absolute;
+    bottom: 2.5rem; left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    pointer-events: all;
+  }
+
+  .nav-hint {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    color: rgba(243,238,229,0.4);
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+
+  .key-badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid rgba(201,169,110,0.3);
+    font-size: 0.6rem;
+    color: rgba(201,169,110,0.6);
+    font-family: 'Sora', sans-serif;
+  }
+
+  /* TOAST de ofrenda */
+  #toast {
+    position: fixed;
+    bottom: 6rem; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(10,17,28,0.95);
+    border: 1px solid var(--gold);
+    color: var(--bg);
+    font-family: 'Sora', sans-serif;
+    font-size: 0.8rem;
+    padding: 0.75rem 1.5rem;
+    opacity: 0;
+    transition: all 0.4s;
+    pointer-events: none;
+    z-index: 200;
+    white-space: nowrap;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* CONTADOR DE VÍCTIMAS */
+  .counter-bar {
+    position: absolute;
+    bottom: 2.5rem; right: 2rem;
+    text-align: right;
+  }
+  .counter-num {
+    font-family: 'Fraunces', serif;
+    font-size: 2.5rem;
+    font-weight: 300;
+    color: rgba(201,169,110,0.4);
+    line-height: 1;
+  }
+  .counter-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(243,238,229,0.25);
+  }
+
+  /* MINIMAP / POSICIÓN */
+  .position-indicator {
+    position: absolute;
+    bottom: 2.5rem; left: 2rem;
+    display: flex; flex-direction: column; gap: 0.25rem;
+  }
+  .pos-label { font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(243,238,229,0.25); }
+  .pos-value { font-family: 'Fraunces', serif; font-size: 0.9rem; color: rgba(201,169,110,0.5); }
+
+  /* Crosshair de movimiento */
+  #crosshair {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px; height: 20px;
+    pointer-events: none;
+    z-index: 60;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  #crosshair.active { opacity: 1; }
+  #crosshair::before, #crosshair::after {
+    content: '';
+    position: absolute;
+    background: rgba(201,169,110,0.6);
+  }
+  #crosshair::before { width: 1px; height: 100%; top: 0; left: 50%; }
+  #crosshair::after { height: 1px; width: 100%; top: 50%; left: 0; }
+
+  /* Instrucción de clic */
+  .click-hint {
+    position: absolute;
+    bottom: 0; left: 50%; transform: translateX(-50%);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(201,169,110,0.5);
+    white-space: nowrap;
+    pointer-events: none;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:0.9} }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="crosshair"></div>
+<div id="toast">🕯️ Ofrenda depositada con amor</div>
+
+<!-- INTRO -->
+<div id="intro">
+  <div class="intro-particles" id="particles"></div>
+  <div class="intro-content">
+    <p class="intro-eyebrow">Universidad de Caldas · PRY-335 · Samaná</p>
+    <h1 class="intro-title">Santuarios de<br><em>la Memoria</em></h1>
+    <div class="intro-divider"></div>
+    <p class="intro-sub">Un espacio digital para honrar a quienes ya no están.<br>Camina entre los santuarios, encuentra a tu familiar<br>y deja una ofrenda de luz.</p>
+    <button class="btn-enter" id="btn-enter">
+      <span>Entrar al recorrido</span>
+      <span>→</span>
+    </button>
+  </div>
+</div>
+
+<!-- HUD EN ESCENA -->
+<div id="hud">
+  <div class="hud-header">
+    <div class="hud-logo">Santuarios <span>de la Memoria</span></div>
+    <div class="hud-nav">
+      <button class="hud-btn active" id="btn-free">Recorrido libre</button>
+      <button class="hud-btn" id="btn-search">Buscar víctima</button>
+      <button class="hud-btn" id="btn-tour">Visita guiada</button>
+    </div>
+  </div>
+
+  <!-- Panel lateral víctima -->
+  <div id="victim-panel">
+    <button class="panel-close" id="panel-close">✕</button>
+    <div class="victim-photo-placeholder" id="victim-initial">G</div>
+    <div class="victim-name" id="victim-name">Gabriel Ospina Ríos</div>
+    <div class="victim-dates" id="victim-dates">1958 — 1998 · Samaná, Caldas</div>
+    <p class="victim-bio" id="victim-bio">Agricultor y padre de familia. Desapareció el 14 de marzo de 1998 en la vereda El Jardín. Su familia lo recuerda como un hombre generoso que amaba la tierra y cantaba vallenatos en las madrugadas.</p>
+
+    <div class="offerings-title">Ofrendas depositadas</div>
+    <div class="offering-btns">
+      <button class="offering-btn" data-type="candle" onclick="placeOffering('candle')">
+        <span class="offering-icon">🕯️</span>
+        <span>Encender vela</span>
+      </button>
+      <button class="offering-btn" data-type="flower" onclick="placeOffering('flower')">
+        <span class="offering-icon">🌹</span>
+        <span>Dejar flor</span>
+      </button>
+      <button class="offering-btn" data-type="candle2" onclick="placeOffering('candle2')">
+        <span class="offering-icon">🌼</span>
+        <span>Flor silvestre</span>
+      </button>
+      <button class="offering-btn" data-type="cross" onclick="placeOffering('cross')">
+        <span class="offering-icon">📿</span>
+        <span>Rosario</span>
+      </button>
+    </div>
+
+    <div class="offerings-count" id="offerings-count">23 ofrendas · 7 mensajes</div>
+
+    <div class="message-area">
+      <label>Deja un mensaje</label>
+      <textarea placeholder="Escribe unas palabras para recordarlo..."></textarea>
+    </div>
+
+    <button class="btn-tribute" onclick="sendTribute()">Enviar homenaje</button>
+  </div>
+
+  <!-- Controles inferiores -->
+  <div id="nav-controls">
+    <div class="nav-hint">
+      <span class="key-badge">Click</span> acercar ·
+      <span class="key-badge">Drag</span> rotar ·
+      <span class="key-badge">Scroll</span> zoom
+    </div>
+  </div>
+
+  <div class="counter-bar">
+    <div class="counter-num">147</div>
+    <div class="counter-label">memoriales activos</div>
+  </div>
+
+  <div class="position-indicator">
+    <div class="pos-label">Zona actual</div>
+    <div class="pos-value" id="zone-name">Galería Principal</div>
+    <p class="click-hint">Haz clic en un memorial para visitarlo</p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ─── PARTÍCULAS INTRO ───────────────────────────────────────────────────────
+const particlesContainer = document.getElementById('particles');
+for (let i = 0; i < 60; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  p.style.cssText = `
+    left: ${Math.random()*100}%;
+    animation-duration: ${4+Math.random()*8}s;
+    animation-delay: ${Math.random()*5}s;
+    --drift: ${(Math.random()-0.5)*200}px;
+    width: ${1+Math.random()*2}px;
+    height: ${1+Math.random()*2}px;
+    opacity: ${0.3+Math.random()*0.5};
+  `;
+  particlesContainer.appendChild(p);
+}
+
+// ─── CURSOR ──────────────────────────────────────────────────────────────────
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+});
+document.querySelectorAll('button, textarea').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
+});
+
+// ─── DATOS DE VÍCTIMAS ───────────────────────────────────────────────────────
+const victims = [
+  { name: 'Gabriel Ospina Ríos', dates: '1958 — 1998', initial: 'G', bio: 'Agricultor y padre de familia. Desapareció el 14 de marzo de 1998 en la vereda El Jardín. Su familia lo recuerda como un hombre generoso que amaba la tierra.', ofrendas: 23, mensajes: 7, zone: 'Galería Principal' },
+  { name: 'Esperanza Duque Llano', dates: '1965 — 2001', initial: 'E', bio: 'Maestra rural de la escuela El Porvenir. Dedicó su vida a enseñar a niños en zonas remotas de Samaná. Madre de tres hijos.', ofrendas: 41, mensajes: 15, zone: 'Jardín del Recuerdo' },
+  { name: 'Luis Ángel Cardona', dates: '1972 — 1999', initial: 'L', bio: 'Joven líder comunitario de la vereda La Rica. Promovía la paz entre vecinos y soñaba con ser veterinario.', ofrendas: 18, mensajes: 9, zone: 'Capilla de la Paz' },
+  { name: 'María Inés Zuluaga', dates: '1950 — 2002', initial: 'M', bio: 'Parteira y curandera conocida en toda la región. Trajo al mundo a cientos de niños. Sus remedios de plantas son aún recordados.', ofrendas: 57, mensajes: 22, zone: 'Galería Principal' },
+  { name: 'Carlos Emilio Hurtado', dates: '1968 — 2000', initial: 'C', bio: 'Campesino cafetero. Padre de cuatro hijos. Desapareció cuando regresaba del mercado de La Dorada.', ofrendas: 12, mensajes: 4, zone: 'Sendero de la Memoria' },
+  { name: 'Rosa Elena Betancur', dates: '1979 — 2003', initial: 'R', bio: 'Joven de 24 años que trabajaba como enfermera en el centro de salud de Samaná. Amante de la música y el teatro.', ofrendas: 35, mensajes: 11, zone: 'Jardín del Recuerdo' },
+  { name: 'Héctor Fabio Monsalve', dates: '1955 — 1997', initial: 'H', bio: 'Comerciante y músico. Tocaba tiple en las festividades del pueblo. Padre y esposo ejemplar según sus vecinos.', ofrendas: 29, mensajes: 8, zone: 'Capilla de la Paz' },
+];
+
+// ─── ESCENA THREE.JS ─────────────────────────────────────────────────────────
+let scene, camera, renderer, clock;
+let memorials = [];
+let particles3D = [];
+let flames = [];
+let currentVictim = null;
+let animFrame;
+let mouse = new THREE.Vector2();
+let raycaster = new THREE.Raycaster();
+let isAutoTour = false;
+let autoAngle = 0;
+let tourTarget = 0;
+
+function initThree() {
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x040810, 0.025);
+
+  camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 200);
+  camera.position.set(0, 3, 18);
+  camera.lookAt(0, 1, 0);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.8;
+  document.body.prepend(renderer.domElement);
+
+  clock = new THREE.Clock();
+
+  buildScene();
+  buildParticles();
+  setupLights();
+  setupControls();
+  animate();
+}
+
+function buildScene() {
+  // SUELO — piedra oscura con patrón
+  const floorGeo = new THREE.PlaneGeometry(120, 120, 40, 40);
+  const floorMat = new THREE.MeshStandardMaterial({
+    color: 0x0d1520,
+    roughness: 0.9,
+    metalness: 0.05,
+  });
+  const floor = new THREE.Mesh(floorGeo, floorMat);
+  floor.rotation.x = -Math.PI/2;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  // LÍNEAS DE CAMINO — piedras luminosas en el piso
+  const pathGeo = new THREE.PlaneGeometry(3, 30);
+  const pathMat = new THREE.MeshStandardMaterial({ color: 0x1a2a3a, roughness: 0.7 });
+  const path = new THREE.Mesh(pathGeo, pathMat);
+  path.rotation.x = -Math.PI/2;
+  path.position.y = 0.01;
+  scene.add(path);
+
+  // CIELO NOCTURNO — esfera con gradiente
+  const skyGeo = new THREE.SphereGeometry(90, 32, 16);
+  const skyMat = new THREE.MeshBasicMaterial({
+    color: 0x020508,
+    side: THREE.BackSide,
+  });
+  scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+  // ESTRELLAS
+  const starGeo = new THREE.BufferGeometry();
+  const starPos = [];
+  for (let i = 0; i < 2000; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(Math.random() * 2 - 1);
+    const r = 80 + Math.random() * 8;
+    starPos.push(r*Math.sin(phi)*Math.cos(theta), r*Math.cos(phi), r*Math.sin(phi)*Math.sin(theta));
+  }
+  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+  const starMat = new THREE.PointsMaterial({ color: 0xfff8e7, size: 0.18, sizeAttenuation: true });
+  scene.add(new THREE.Points(starGeo, starMat));
+
+  // ARCOS ARQUITECTÓNICOS — columnas a los lados
+  buildArches();
+
+  // MEMORIALES
+  const positions = [
+    [-5, 0, -2], [0, 0, -4], [5, 0, -2],
+    [-6, 0, -8], [0, 0, -10], [6, 0, -8],
+    [0, 0, -16],
+  ];
+
+  victims.forEach((v, i) => {
+    const pos = positions[i] || [Math.cos(i*1.2)*7, 0, Math.sin(i*1.2)*7 - 6];
+    const memorial = buildMemorial(v, pos);
+    memorials.push(memorial);
+  });
+
+  // NIEBLA EN EL PISO
+  for (let i = 0; i < 12; i++) {
+    const fogPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(8, 8),
+      new THREE.MeshBasicMaterial({
+        color: 0x0a1828,
+        transparent: true,
+        opacity: 0.18,
+        depthWrite: false,
+      })
+    );
+    fogPlane.rotation.x = -Math.PI/2;
+    fogPlane.position.set((Math.random()-0.5)*30, 0.05, Math.random()*-25 - 2);
+    scene.add(fogPlane);
+  }
+}
+
+function buildArches() {
+  const colMat = new THREE.MeshStandardMaterial({ color: 0x0e1e2c, roughness: 0.8, metalness: 0.1 });
+  for (let z = 0; z >= -20; z -= 5) {
+    for (const x of [-8, 8]) {
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 6, 8), colMat);
+      col.position.set(x, 3, z);
+      col.castShadow = true;
+      scene.add(col);
+
+      // Luz en la parte superior de cada columna
+      const colLight = new THREE.PointLight(0x1a4a6a, 0.3, 4);
+      colLight.position.set(x, 5.5, z);
+      scene.add(colLight);
+    }
+  }
+}
+
+function buildMemorial(victim, pos) {
+  const group = new THREE.Group();
+  group.position.set(...pos);
+  group.userData = { victim, id: victims.indexOf(victim) };
+
+  // BASE / PEDESTAL
+  const baseGeo = new THREE.BoxGeometry(1.2, 0.15, 1.2);
+  const stoneMat = new THREE.MeshStandardMaterial({ color: 0x16273a, roughness: 0.85, metalness: 0.15 });
+  const base = new THREE.Mesh(baseGeo, stoneMat);
+  base.position.y = 0.075;
+  base.receiveShadow = true;
+  base.castShadow = true;
+  group.add(base);
+
+  // COLUMNA
+  const colGeo = new THREE.BoxGeometry(0.7, 1.8, 0.12);
+  const col = new THREE.Mesh(colGeo, stoneMat);
+  col.position.y = 1.05;
+  col.castShadow = true;
+  col.receiveShadow = true;
+  group.add(col);
+
+  // FOTO/PLACA — plano oscuro con borde dorado
+  const plateGeo = new THREE.BoxGeometry(0.58, 0.7, 0.03);
+  const plateMat = new THREE.MeshStandardMaterial({ color: 0x0a1520, roughness: 0.5, metalness: 0.3 });
+  const plate = new THREE.Mesh(plateGeo, plateMat);
+  plate.position.set(0, 1.05, 0.075);
+  group.add(plate);
+
+  // BORDE DORADO para la placa
+  const borderGeo = new THREE.BoxGeometry(0.62, 0.74, 0.02);
+  const borderMat = new THREE.MeshStandardMaterial({ color: 0xb8860b, roughness: 0.3, metalness: 0.8 });
+  const border = new THREE.Mesh(borderGeo, borderMat);
+  border.position.set(0, 1.05, 0.065);
+  group.add(border);
+
+  // INICIAL EN LA PLACA (esfera con inicial simulada)
+  const sphereGeo = new THREE.SphereGeometry(0.12, 12, 12);
+  const sphereMat = new THREE.MeshStandardMaterial({ color: 0x124a63, roughness: 0.4, metalness: 0.2, emissive: 0x0a2030, emissiveIntensity: 0.3 });
+  const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+  sphere.position.set(0, 1.12, 0.1);
+  group.add(sphere);
+
+  // VELA EN LA BASE
+  buildCandle(group, [0.25, 0.15, 0.3]);
+  buildCandle(group, [-0.25, 0.15, 0.3]);
+
+  // LUZ ANARANJADA DE VELA
+  const candleLight = new THREE.PointLight(0xffaa44, 0.8, 2.5);
+  candleLight.position.set(0, 0.6, 0.4);
+  group.add(candleLight);
+  flames.push({ light: candleLight, base: 0.8, offset: Math.random()*Math.PI*2 });
+
+  // HITBOX invisible para raycasting
+  const hitGeo = new THREE.BoxGeometry(1.4, 2.2, 1.4);
+  const hitMat = new THREE.MeshBasicMaterial({ visible: false });
+  const hitbox = new THREE.Mesh(hitGeo, hitMat);
+  hitbox.position.y = 1;
+  hitbox.userData = { isHitbox: true, victimId: victims.indexOf(victim) };
+  group.add(hitbox);
+
+  scene.add(group);
+  return group;
+}
+
+function buildCandle(group, pos) {
+  const [x, y, z] = pos;
+  const candleBody = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.04, 0.04, 0.25, 8),
+    new THREE.MeshStandardMaterial({ color: 0xfff8dc, roughness: 0.9 })
+  );
+  candleBody.position.set(x, y + 0.125, z);
+  group.add(candleBody);
+
+  const flameMesh = new THREE.Mesh(
+    new THREE.ConeGeometry(0.03, 0.08, 6),
+    new THREE.MeshBasicMaterial({ color: 0xffcc44 })
+  );
+  flameMesh.position.set(x, y + 0.29, z);
+  group.add(flameMesh);
+}
+
+function buildParticles() {
+  const geo = new THREE.BufferGeometry();
+  const count = 800;
+  const pos = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    pos[i*3] = (Math.random()-0.5)*40;
+    pos[i*3+1] = Math.random()*8;
+    pos[i*3+2] = Math.random()*-30;
+  }
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  const mat = new THREE.PointsMaterial({
+    color: 0xffdd88,
+    size: 0.06,
+    transparent: true,
+    opacity: 0.5,
+    sizeAttenuation: true,
+  });
+  const pts = new THREE.Points(geo, mat);
+  scene.add(pts);
+  particles3D.push(pts);
+}
+
+function setupLights() {
+  const ambient = new THREE.AmbientLight(0x0a1520, 1.2);
+  scene.add(ambient);
+
+  const moonLight = new THREE.DirectionalLight(0x1a2d40, 0.4);
+  moonLight.position.set(-20, 30, -10);
+  moonLight.castShadow = true;
+  scene.add(moonLight);
+
+  // Luz azulada al fondo (profundidad)
+  const backLight = new THREE.PointLight(0x0a3050, 1.5, 30);
+  backLight.position.set(0, 5, -20);
+  scene.add(backLight);
+}
+
+// ─── CONTROLES ───────────────────────────────────────────────────────────────
+let isDragging = false;
+let prevMouse = { x: 0, y: 0 };
+let camTheta = 0, camPhi = 0.15;
+let camRadius = 18;
+let targetTheta = 0, targetPhi = 0.15, targetRadius = 18;
+let camTarget = new THREE.Vector3(0, 1, -4);
+
+function setupControls() {
+  renderer.domElement.addEventListener('mousedown', e => {
+    isDragging = true;
+    prevMouse = { x: e.clientX, y: e.clientY };
+  });
+
+  document.addEventListener('mousemove', e => {
+    mouse.x = (e.clientX/innerWidth)*2-1;
+    mouse.y = -(e.clientY/innerHeight)*2+1;
+
+    if (isDragging) {
+      const dx = (e.clientX - prevMouse.x) * 0.005;
+      const dy = (e.clientY - prevMouse.y) * 0.003;
+      targetTheta -= dx;
+      targetPhi = Math.max(0.05, Math.min(0.6, targetPhi - dy));
+      prevMouse = { x: e.clientX, y: e.clientY };
+    }
+  });
+
+  document.addEventListener('mouseup', e => {
+    if (!isDragging) return;
+    isDragging = false;
+
+    // Raycasting en click
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(scene.children, true);
+    for (const h of hits) {
+      if (h.object.userData.victimId !== undefined) {
+        selectVictim(h.object.userData.victimId);
+        break;
+      }
+    }
+  });
+
+  renderer.domElement.addEventListener('wheel', e => {
+    targetRadius = Math.max(5, Math.min(30, targetRadius + e.deltaY * 0.02));
+  });
+
+  window.addEventListener('resize', () => {
+    camera.aspect = innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+}
+
+function selectVictim(id) {
+  const v = victims[id];
+  document.getElementById('victim-name').textContent = v.name;
+  document.getElementById('victim-dates').textContent = v.dates + ' · Samaná, Caldas';
+  document.getElementById('victim-initial').textContent = v.initial;
+  document.getElementById('victim-bio').textContent = v.bio;
+  document.getElementById('offerings-count').textContent = `${v.ofrendas} ofrendas · ${v.mensajes} mensajes`;
+  document.getElementById('zone-name').textContent = v.zone;
+  document.getElementById('victim-panel').classList.add('open');
+
+  // Mover cámara hacia el memorial
+  const m = memorials[id];
+  const p = m.position;
+  targetTheta = Math.atan2(p.x, p.z + 5);
+  targetRadius = 9;
+  camTarget.set(p.x, 1, p.z);
+
+  // Reset offering buttons
+  document.querySelectorAll('.offering-btn').forEach(b => b.classList.remove('placed'));
+}
+
+// ─── ANIMACIÓN ───────────────────────────────────────────────────────────────
+function animate() {
+  animFrame = requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  const delta = clock.getDelta ? 0.016 : 0.016;
+
+  // Suavizar cámara
+  camTheta += (targetTheta - camTheta) * 0.05;
+  camPhi += (targetPhi - camPhi) * 0.05;
+  camRadius += (targetRadius - camRadius) * 0.05;
+
+  const cx = camTarget.x + camRadius * Math.sin(camTheta) * Math.cos(camPhi);
+  const cy = camTarget.y + camRadius * Math.sin(camPhi) + 1;
+  const cz = camTarget.z + camRadius * Math.cos(camTheta) * Math.cos(camPhi);
+
+  camera.position.set(cx, cy, cz);
+  camera.lookAt(camTarget);
+
+  // Tour automático
+  if (isAutoTour) {
+    autoAngle += 0.003;
+    targetTheta = autoAngle;
+    if (Math.floor(autoAngle / (Math.PI * 0.8)) !== tourTarget) {
+      tourTarget = Math.floor(autoAngle / (Math.PI * 0.8));
+      const idx = tourTarget % victims.length;
+      selectVictim(idx);
+    }
+  }
+
+  // Parpadeo de llamas
+  flames.forEach(f => {
+    f.light.intensity = f.base + Math.sin(t * 8 + f.offset) * 0.3 + Math.sin(t * 13 + f.offset) * 0.15;
+  });
+
+  // Partículas flotantes
+  particles3D.forEach(pts => {
+    const pos = pts.geometry.attributes.position.array;
+    for (let i = 1; i < pos.length; i += 3) {
+      pos[i] += 0.003;
+      if (pos[i] > 8) pos[i] = 0.1;
+    }
+    pts.geometry.attributes.position.needsUpdate = true;
+  });
+
+  // Hover highlight en memoriales
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(scene.children, true);
+  document.body.style.cursor = 'none';
+  memorials.forEach(m => {
+    m.children.forEach(c => {
+      if (c.material && !c.material.visible === false) {
+        if (c.material.emissive) c.material.emissiveIntensity = 0.1;
+      }
+    });
+  });
+  for (const h of hits) {
+    if (h.object.userData.victimId !== undefined) {
+      const m = memorials[h.object.userData.victimId];
+      m.children.forEach(c => {
+        if (c.material && c.material.emissive) c.material.emissiveIntensity = 0.5;
+      });
+      break;
+    }
+  }
+
+  renderer.render(scene, camera);
+}
+
+// ─── INTERACCIONES ───────────────────────────────────────────────────────────
+function placeOffering(type) {
+  const btn = document.querySelector(`[data-type="${type}"]`);
+  btn.classList.toggle('placed');
+  const icons = { candle: '🕯️ Vela encendida', flower: '🌹 Flor depositada', candle2: '🌼 Flor silvestre', cross: '📿 Rosario colocado' };
+  showToast(icons[type] + ' con amor');
+
+  // Actualizar contador
+  const countEl = document.getElementById('offerings-count');
+  const match = countEl.textContent.match(/(\d+) ofrendas/);
+  if (match) {
+    const n = btn.classList.contains('placed') ? +match[1] + 1 : +match[1] - 1;
+    countEl.textContent = countEl.textContent.replace(/\d+ ofrendas/, `${n} ofrendas`);
+  }
+}
+
+function sendTribute() {
+  const ta = document.querySelector('.message-area textarea');
+  if (ta.value.trim()) {
+    showToast('💌 Homenaje enviado. Gracias por recordar.');
+    ta.value = '';
+  } else {
+    showToast('✍️ Escribe un mensaje antes de enviar');
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ─── BOTONES HUD ─────────────────────────────────────────────────────────────
+document.getElementById('btn-free').addEventListener('click', () => {
+  isAutoTour = false;
+  document.querySelectorAll('.hud-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-free').classList.add('active');
+  targetRadius = 18;
+  camTarget.set(0,1,-4);
+  document.getElementById('victim-panel').classList.remove('open');
+});
+
+document.getElementById('btn-search').addEventListener('click', () => {
+  const idx = Math.floor(Math.random() * victims.length);
+  selectVictim(idx);
+  document.querySelectorAll('.hud-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-search').classList.add('active');
+});
+
+document.getElementById('btn-tour').addEventListener('click', () => {
+  isAutoTour = !isAutoTour;
+  document.getElementById('btn-tour').classList.toggle('active', isAutoTour);
+  document.getElementById('btn-tour').textContent = isAutoTour ? 'Detener tour' : 'Visita guiada';
+  targetRadius = 10;
+});
+
+document.getElementById('panel-close').addEventListener('click', () => {
+  document.getElementById('victim-panel').classList.remove('open');
+  isAutoTour = false;
+  targetRadius = 18;
+  camTarget.set(0,1,-4);
+});
+
+// ─── ENTRADA ──────────────────────────────────────────────────────────────────
+document.getElementById('btn-enter').addEventListener('click', () => {
+  const intro = document.getElementById('intro');
+  intro.classList.add('fade-out');
+  const hud = document.getElementById('hud');
+  setTimeout(() => {
+    intro.style.display = 'none';
+    hud.classList.add('visible');
+    initThree();
+  }, 1500);
+});
+
+// Agregar event listeners de hover para cursor en HUD
+document.querySelectorAll('.hud-btn, .hud-nav button, .offering-btn, .btn-tribute, .panel-close').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
+});
+</script>
+</body>
+</html>
