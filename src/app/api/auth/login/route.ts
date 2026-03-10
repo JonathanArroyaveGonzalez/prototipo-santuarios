@@ -1,36 +1,33 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const plainPassword = String(password);
 
-    if (!email || !password) {
+    if (!normalizedEmail || !plainPassword) {
       return NextResponse.json(
         { message: "Email y contraseña son requeridos" },
         { status: 400 }
       );
     }
 
-    // Buscar usuario por email
+    // Verificacion temporal: el campo hash_password se compara como texto plano.
     const usuario = await prisma.usuarios.findFirst({
-      where: { email: email.toLowerCase() },
+      where: {
+        email: {
+          equals: normalizedEmail,
+          mode: "insensitive",
+        },
+        hash_password: plainPassword,
+      },
     });
 
     if (!usuario) {
       return NextResponse.json(
-        { message: "Usuario no encontrado" },
-        { status: 401 }
-      );
-    }
-
-    // Verificar contraseña
-    const passwordMatch = await bcrypt.compare(password, usuario.hash_password);
-
-    if (!passwordMatch) {
-      return NextResponse.json(
-        { message: "Contraseña incorrecta" },
+        { message: "Credenciales invalidas" },
         { status: 401 }
       );
     }
