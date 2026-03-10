@@ -28,10 +28,27 @@ type GardenSlot = {
   showPortrait: boolean;
 };
 
+let introShownInCurrentRuntime = false;
+
 const GARDEN_SLOTS = 12;
+const HERO_FLOATING_ORBS = [
+  { left: "5%", delay: "0s", duration: "11.2s", size: 12 },
+  { left: "11%", delay: "1.1s", duration: "10.1s", size: 8 },
+  { left: "18%", delay: "2.2s", duration: "12.3s", size: 13 },
+  { left: "27%", delay: "0.6s", duration: "10.9s", size: 10 },
+  { left: "36%", delay: "2.7s", duration: "13.5s", size: 14 },
+  { left: "45%", delay: "1.5s", duration: "11.4s", size: 9 },
+  { left: "54%", delay: "0.4s", duration: "12.1s", size: 12 },
+  { left: "62%", delay: "2.1s", duration: "13.1s", size: 10 },
+  { left: "70%", delay: "1.8s", duration: "10.8s", size: 9 },
+  { left: "78%", delay: "2.9s", duration: "13.8s", size: 15 },
+  { left: "86%", delay: "0.9s", duration: "11.7s", size: 11 },
+  { left: "93%", delay: "1.7s", duration: "10.5s", size: 8 },
+];
 
 function buildPortraitData(victim: VictimaLite) {
-  const initials = `${victim.nombres?.charAt(0) ?? ""}${victim.apellidos?.charAt(0) ?? ""}`.toUpperCase();
+  const initials =
+    `${victim.nombres?.charAt(0) ?? ""}${victim.apellidos?.charAt(0) ?? ""}`.toUpperCase();
   const fullName = `${victim.nombres} ${victim.apellidos}`;
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 280 280'>
     <defs>
@@ -63,23 +80,42 @@ function formatDate(value?: string | null) {
 
 export default function Home() {
   const { t } = useLanguage();
-  const [stats, setStats] = useState<Stats>({ victimas: 0, testimonios: 0, lugares: 0 });
-  const [showIntroCover, setShowIntroCover] = useState(true);
+  const [stats, setStats] = useState<Stats>({
+    victimas: 0,
+    testimonios: 0,
+    lugares: 0,
+  });
+  const [showIntroCover, setShowIntroCover] = useState(false);
   const [openingCover, setOpeningCover] = useState(false);
   const [victims, setVictims] = useState<VictimaLite[]>([]);
-  const [selectedVictim, setSelectedVictim] = useState<VictimaLite | null>(null);
+  const [selectedVictim, setSelectedVictim] = useState<VictimaLite | null>(
+    null,
+  );
   const [gardenSlots, setGardenSlots] = useState<GardenSlot[]>(
     Array.from({ length: GARDEN_SLOTS }, (_, idx) => ({
       id: idx,
       victimId: null,
       showPortrait: false,
-    }))
+    })),
   );
 
   const victimMap = useMemo(
     () => new Map(victims.map((victim) => [victim.id, victim])),
-    [victims]
+    [victims],
   );
+
+  useEffect(() => {
+    if (introShownInCurrentRuntime) return;
+
+    const navigationEntry = performance.getEntriesByType("navigation")[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+
+    if (navigationEntry?.type === "reload") {
+      introShownInCurrentRuntime = true;
+      setShowIntroCover(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (!showIntroCover) return;
@@ -140,16 +176,18 @@ export default function Home() {
       fetch("/api/victimas").then((r) => r.json()),
       fetch("/api/testimonios").then((r) => r.json()),
       fetch("/api/lugares").then((r) => r.json()),
-    ]).then(([victimas, testimonios, lugares]) => {
-      setVictims(victimas);
-      setStats({
-        victimas: victimas.length,
-        testimonios: testimonios.length,
-        lugares: lugares.length,
+    ])
+      .then(([victimas, testimonios, lugares]) => {
+        setVictims(victimas);
+        setStats({
+          victimas: victimas.length,
+          testimonios: testimonios.length,
+          lugares: lugares.length,
+        });
+      })
+      .catch(() => {
+        // Silently handle errors
       });
-    }).catch(() => {
-      // Silently handle errors
-    });
   }, []);
 
   useEffect(() => {
@@ -157,13 +195,14 @@ export default function Home() {
 
     setGardenSlots(
       Array.from({ length: GARDEN_SLOTS }, (_, idx) => {
-        const randomVictim = victims[Math.floor(Math.random() * victims.length)];
+        const randomVictim =
+          victims[Math.floor(Math.random() * victims.length)];
         return {
           id: idx,
           victimId: randomVictim.id,
           showPortrait: Math.random() > 0.35,
         };
-      })
+      }),
     );
   }, [victims]);
 
@@ -177,7 +216,8 @@ export default function Home() {
 
         for (let i = 0; i < changes; i += 1) {
           const slotIndex = Math.floor(Math.random() * next.length);
-          const randomVictim = victims[Math.floor(Math.random() * victims.length)];
+          const randomVictim =
+            victims[Math.floor(Math.random() * victims.length)];
           next[slotIndex] = {
             ...next[slotIndex],
             victimId: randomVictim.id,
@@ -203,7 +243,7 @@ export default function Home() {
           }
         });
       },
-      { threshold: 0.18 }
+      { threshold: 0.18 },
     );
 
     elements.forEach((element) => observer.observe(element));
@@ -218,113 +258,168 @@ export default function Home() {
           <div className="home-intro-left" />
           <div className="home-intro-right" />
           <div className="home-intro-overlay" />
+          <div className="home-intro-hint" aria-live="polite">
+            <p className="home-intro-hint-label">Desliza</p>
+            <div className="home-intro-swipe" aria-hidden="true">
+              <span className="home-intro-hint-icon">⌄</span>
+              <span className="home-intro-hint-icon is-second">⌄</span>
+            </div>
+          </div>
         </div>
       )}
 
-      <main className={`mx-auto w-full max-w-7xl px-4 py-12 transition-opacity duration-700 sm:px-8 ${showIntroCover ? "opacity-0" : "opacity-100"}`}>
-        <section data-reveal className="hero-appear case-hero surface-panel relative overflow-hidden rounded-3xl p-8 sm:p-16">
-          <div className="absolute -right-14 -top-12 h-44 w-44 rounded-full bg-[radial-gradient(circle,#d9ebe8_0%,#ffffff00_70%)]" />
-          <div className="absolute -bottom-24 -left-14 h-52 w-52 rounded-full bg-[radial-gradient(circle,#f6e6df_0%,#ffffff00_72%)]" />
-          <div className="memorial-divider" />
+      <section
+        className={`hero-appear memorial-hero relative isolate min-h-[100svh] w-full overflow-hidden transition-opacity duration-700 ${showIntroCover ? "opacity-0" : "opacity-100"}`}
+      >
+        <div className="memorial-hero-atmosphere" aria-hidden="true" />
+        <div className="memorial-hero-orbs" aria-hidden="true">
+          {HERO_FLOATING_ORBS.map((orb, idx) => (
+            <span
+              key={idx}
+              className="memorial-hero-orb"
+              style={{
+                left: orb.left,
+                bottom: "-8%",
+                width: `${orb.size}px`,
+                height: `${orb.size}px`,
+                animationDelay: orb.delay,
+                animationDuration: orb.duration,
+              }}
+            />
+          ))}
+        </div>
 
-          <div className="relative max-w-4xl">
-            <span className="inline-flex rounded-full border border-[#d9c6ab] bg-[#fff4e3] px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8b4b2e]">
-              Proyecto PRY-335 · Universidad de Caldas
-            </span>
-
-            <h1 className="section-title mt-6 text-4xl leading-tight sm:text-6xl">
-              {t.home.title}
+        <div className="absolute inset-0 z-10 flex items-center justify-center px-4 text-center">
+          <div className="mx-auto max-w-4xl">
+            <h1 className="memorial-hero-title text-4xl leading-tight sm:text-6xl">
+              Santuario Digital
             </h1>
 
-            <p className="text-soft mt-6 max-w-3xl text-base leading-relaxed sm:text-lg">
-              {t.home.subtitle}
+            <p className="memorial-hero-subtitle mx-auto mt-5 max-w-3xl text-base leading-relaxed sm:text-xl">
+              Un espacio sagrado para honrar la memoria,
+              <br className="hidden sm:block" />
+              celebrar la vida y encontrar esperanza
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="home-light-wall" aria-hidden="true">
+              {Array.from({ length: 13 }).map((_, idx) => (
+                <span key={idx} className="home-light-candle" />
+              ))}
+            </div>
+
+            <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Link href="/victimas">
-                <Button size="lg">{t.home.exploreVictims}</Button>
+                <Button size="lg" className="home-hero-btn home-hero-btn-ghost">
+                  {t.home.exploreVictims}
+                </Button>
               </Link>
               <Link href="/mapa">
-                <Button variant="secondary" size="lg">{t.home.viewMap}</Button>
+                <Button size="lg" className="home-hero-btn home-hero-btn-ghost">
+                  {t.home.viewMap}
+                </Button>
               </Link>
               <Link href="/recorrido-virtual">
-                <Button size="lg" variant="accent" className="shadow-xl ring-2 ring-[#c79a63]/35">
+                <Button
+                  size="lg"
+                  className="home-hero-btn home-hero-btn-accent"
+                >
                   {t.home.virtualTourCta}
                 </Button>
               </Link>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
+      <main
+        className={`mx-auto w-full max-w-7xl px-4 py-12 transition-opacity duration-700 sm:px-8 ${showIntroCover ? "opacity-0" : "opacity-100"}`}
+      >
         <section data-reveal className="mt-12 grid gap-6 sm:grid-cols-3">
           <Card className="stagger-item">
             <CardHeader>
-              <p className="text-xs uppercase tracking-[0.14em] text-[#8f614d]">{t.home.victimsRegistered}</p>
+              <p className="text-xs uppercase tracking-[0.14em] text-[#8f614d]">
+                {t.home.victimsRegistered}
+              </p>
               <CardTitle className="mt-2 text-4xl font-bold text-[var(--brand-strong)]">
                 {stats.victimas}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-soft text-sm">
-                {t.home.documentsDesc}
-              </p>
+              <p className="text-soft text-sm">{t.home.documentsDesc}</p>
             </CardContent>
           </Card>
 
           <Card className="stagger-item">
             <CardHeader>
-              <p className="text-xs uppercase tracking-[0.14em] text-[#8f614d]">{t.home.testimonies}</p>
+              <p className="text-xs uppercase tracking-[0.14em] text-[#8f614d]">
+                {t.home.testimonies}
+              </p>
               <CardTitle className="mt-2 text-4xl font-bold text-[var(--brand-strong)]">
                 {stats.testimonios}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-soft text-sm">
-                {t.home.familyDesc}
-              </p>
+              <p className="text-soft text-sm">{t.home.familyDesc}</p>
             </CardContent>
           </Card>
 
           <Card className="stagger-item">
             <CardHeader>
-              <p className="text-xs uppercase tracking-[0.14em] text-[#8f614d]">{t.home.memoryPlaces}</p>
+              <p className="text-xs uppercase tracking-[0.14em] text-[#8f614d]">
+                {t.home.memoryPlaces}
+              </p>
               <CardTitle className="mt-2 text-4xl font-bold text-[var(--brand-strong)]">
                 {stats.lugares}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-soft text-sm">
-                {t.home.sitesDesc}
-              </p>
+              <p className="text-soft text-sm">{t.home.sitesDesc}</p>
             </CardContent>
           </Card>
         </section>
 
-        <section data-reveal className="garden-section mt-16 rounded-3xl p-8 sm:p-12">
+        <section
+          data-reveal
+          className="garden-section mt-16 rounded-3xl p-8 sm:p-12"
+        >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-[#8f614d]">Memoria viva</p>
-              <h2 className="section-title mt-2 text-3xl sm:text-4xl">{t.home.gardenTitle}</h2>
+              <p className="text-xs uppercase tracking-[0.24em] text-[#8f614d]">
+                Memoria viva
+              </p>
+              <h2 className="section-title mt-2 text-3xl sm:text-4xl">
+                {t.home.gardenTitle}
+              </h2>
             </div>
             <p className="text-soft max-w-xl text-sm sm:text-right sm:text-base">
               {t.home.gardenHint}
             </p>
           </div>
 
-          <p className="text-soft mt-4 max-w-3xl leading-relaxed">{t.home.gardenSubtitle}</p>
+          <p className="text-soft mt-4 max-w-3xl leading-relaxed">
+            {t.home.gardenSubtitle}
+          </p>
 
           <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {gardenSlots.map((slot) => {
-              const victim = slot.victimId ? victimMap.get(slot.victimId) : null;
+              const victim = slot.victimId
+                ? victimMap.get(slot.victimId)
+                : null;
               return (
                 <button
                   key={slot.id}
                   type="button"
                   onClick={() => victim && setSelectedVictim(victim)}
                   className="garden-tile"
-                  aria-label={victim ? `${victim.nombres} ${victim.apellidos}` : "Vela conmemorativa"}
+                  aria-label={
+                    victim
+                      ? `${victim.nombres} ${victim.apellidos}`
+                      : "Vela conmemorativa"
+                  }
                 >
-                  <div className={`garden-tile-inner ${slot.showPortrait && victim ? "show-portrait" : "show-candle"}`}>
+                  <div
+                    className={`garden-tile-inner ${slot.showPortrait && victim ? "show-portrait" : "show-candle"}`}
+                  >
                     {slot.showPortrait && victim ? (
                       <img
                         src={buildPortraitData(victim)}
@@ -332,7 +427,9 @@ export default function Home() {
                         className="garden-portrait"
                       />
                     ) : (
-                      <div className="garden-candle" aria-hidden="true">🕯️</div>
+                      <div className="garden-candle" aria-hidden="true">
+                        🕯️
+                      </div>
                     )}
                   </div>
                   <div className="garden-tile-overlay" />
@@ -342,12 +439,18 @@ export default function Home() {
           </div>
         </section>
 
-        <section data-reveal className="mt-16 surface-panel rounded-3xl p-8 sm:p-12">
-          <h2 className="section-title text-3xl sm:text-4xl">{t.home.projectTitle}</h2>
+        <section
+          data-reveal
+          className="mt-16 surface-panel rounded-3xl p-8 sm:p-12"
+        >
+          <h2 className="section-title text-3xl sm:text-4xl">
+            {t.home.projectTitle}
+          </h2>
           <div className="mt-6 grid gap-8 lg:grid-cols-2">
             <div>
               <p className="text-soft leading-relaxed">
-                {t.home.projectDesc1} <strong>{t.home.projectName}</strong> {t.home.projectDesc2}
+                {t.home.projectDesc1} <strong>{t.home.projectName}</strong>{" "}
+                {t.home.projectDesc2}
               </p>
               <p className="text-soft mt-4 leading-relaxed">
                 {t.home.projectDesc3}
@@ -355,16 +458,26 @@ export default function Home() {
             </div>
             <div className="space-y-4">
               <div className="rounded-xl border border-[var(--line)] bg-white p-4">
-                <h3 className="font-semibold text-[var(--brand-strong)]">{t.home.coordination}</h3>
-                <p className="text-soft text-sm mt-1">{t.home.coordinationText}</p>
+                <h3 className="font-semibold text-[var(--brand-strong)]">
+                  {t.home.coordination}
+                </h3>
+                <p className="text-soft text-sm mt-1">
+                  {t.home.coordinationText}
+                </p>
               </div>
               <div className="rounded-xl border border-[var(--line)] bg-white p-4">
-                <h3 className="font-semibold text-[var(--brand-strong)]">{t.home.duration}</h3>
+                <h3 className="font-semibold text-[var(--brand-strong)]">
+                  {t.home.duration}
+                </h3>
                 <p className="text-soft text-sm mt-1">{t.home.durationText}</p>
               </div>
               <div className="rounded-xl border border-[var(--line)] bg-white p-4">
-                <h3 className="font-semibold text-[var(--brand-strong)]">{t.home.population}</h3>
-                <p className="text-soft text-sm mt-1">{t.home.populationText}</p>
+                <h3 className="font-semibold text-[var(--brand-strong)]">
+                  {t.home.population}
+                </h3>
+                <p className="text-soft text-sm mt-1">
+                  {t.home.populationText}
+                </p>
               </div>
             </div>
           </div>
@@ -376,13 +489,17 @@ export default function Home() {
         </section>
 
         <section data-reveal className="mt-16 text-center">
-          <h2 className="section-title text-2xl sm:text-3xl">{t.home.contribute}</h2>
+          <h2 className="section-title text-2xl sm:text-3xl">
+            {t.home.contribute}
+          </h2>
           <p className="text-soft mx-auto mt-4 max-w-2xl">
             {t.home.contributeDesc}
           </p>
           <div className="mt-6">
             <Link href="/dashboard">
-              <Button size="lg" variant="accent">{t.home.accessSystem}</Button>
+              <Button size="lg" variant="accent">
+                {t.home.accessSystem}
+              </Button>
             </Link>
           </div>
         </section>
@@ -410,10 +527,22 @@ export default function Home() {
             </h3>
 
             <div className="mt-5 space-y-2 text-sm text-[#4d5b52]">
-              <p><strong>{t.home.gardenModalMunicipality}:</strong> {selectedVictim.municipio || "-"}</p>
-              <p><strong>{t.home.gardenModalDepartment}:</strong> {selectedVictim.departamento || "-"}</p>
-              <p><strong>{t.home.gardenModalDisappearance}:</strong> {formatDate(selectedVictim.fecha_desaparicion)}</p>
-              <p><strong>{t.home.gardenModalStatus}:</strong> {selectedVictim.estado_busqueda || "-"}</p>
+              <p>
+                <strong>{t.home.gardenModalMunicipality}:</strong>{" "}
+                {selectedVictim.municipio || "-"}
+              </p>
+              <p>
+                <strong>{t.home.gardenModalDepartment}:</strong>{" "}
+                {selectedVictim.departamento || "-"}
+              </p>
+              <p>
+                <strong>{t.home.gardenModalDisappearance}:</strong>{" "}
+                {formatDate(selectedVictim.fecha_desaparicion)}
+              </p>
+              <p>
+                <strong>{t.home.gardenModalStatus}:</strong>{" "}
+                {selectedVictim.estado_busqueda || "-"}
+              </p>
             </div>
           </div>
         </div>
