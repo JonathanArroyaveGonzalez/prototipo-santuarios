@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { motion, useInView } from "framer-motion";
+import { Flower2, Flame, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLanguage } from "@/lib/language-context";
@@ -20,17 +22,14 @@ type VictimaLite = {
   departamento: string;
   fecha_desaparicion?: string | null;
   estado_busqueda?: string;
-};
-
-type GardenSlot = {
-  id: number;
-  victimId: number | null;
-  showPortrait: boolean;
+  foto_url?: string | null;
 };
 
 let introShownInCurrentRuntime = false;
 
-const GARDEN_SLOTS = 12;
+const WALL_COLUMNS = 12;
+const WALL_ROWS = 4;
+const WALL_VISIBLE_TILES = WALL_COLUMNS * WALL_ROWS;
 const HERO_FLOATING_ORBS = [
   { left: "5%", delay: "0s", duration: "11.2s", size: 12 },
   { left: "11%", delay: "1.1s", duration: "10.1s", size: 8 },
@@ -46,25 +45,28 @@ const HERO_FLOATING_ORBS = [
   { left: "93%", delay: "1.7s", duration: "10.5s", size: 8 },
 ];
 
-function buildPortraitData(victim: VictimaLite) {
-  const initials =
-    `${victim.nombres?.charAt(0) ?? ""}${victim.apellidos?.charAt(0) ?? ""}`.toUpperCase();
-  const fullName = `${victim.nombres} ${victim.apellidos}`;
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 280 280'>
-    <defs>
-      <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
-        <stop offset='0%' stop-color='#1f3e34'/>
-        <stop offset='100%' stop-color='#b2916f'/>
-      </linearGradient>
-    </defs>
-    <rect width='100%' height='100%' fill='url(#g)' />
-    <circle cx='140' cy='120' r='64' fill='rgba(255,255,255,0.18)' />
-    <text x='140' y='139' text-anchor='middle' fill='#fffdf6' font-size='58' font-family='Georgia, serif'>${initials}</text>
-    <rect x='24' y='210' width='232' height='44' rx='10' fill='rgba(12,20,16,0.38)' />
-    <text x='140' y='238' text-anchor='middle' fill='#f9efe1' font-size='16' font-family='Arial, sans-serif'>${fullName}</text>
-  </svg>`;
+function getVictimPhoto(victim: VictimaLite) {
+  const candidate = victim.foto_url?.trim();
+  return candidate && candidate.length > 0 ? candidate : null;
+}
 
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+function shuffleWithSeed<T>(items: T[], seed: number) {
+  const next = [...items];
+  let state = (seed || 1) >>> 0;
+  const random = () => {
+    state += 0x6d2b79f5;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    [next[i], next[j]] = [next[j], next[i]];
+  }
+
+  return next;
 }
 
 function formatDate(value?: string | null) {
@@ -76,6 +78,31 @@ function formatDate(value?: string | null) {
     month: "long",
     day: "numeric",
   });
+}
+
+function AnimatedCount({ value }: { value: number }) {
+  const ref = useRef<HTMLSpanElement | null>(null);
+  const inView = useInView(ref, { once: true, amount: 0.5 });
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+
+    const duration = 1300;
+    let frameId = 0;
+    const startedAt = performance.now();
+
+    const tick = (timestamp: number) => {
+      const progress = Math.min((timestamp - startedAt) / duration, 1);
+      setDisplayValue(Math.round(value * progress));
+      if (progress < 1) frameId = requestAnimationFrame(tick);
+    };
+
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, [inView, value]);
+
+  return <span ref={ref}>{displayValue.toLocaleString("es-CO")}</span>;
 }
 
 export default function Home() {
@@ -91,18 +118,54 @@ export default function Home() {
   const [selectedVictim, setSelectedVictim] = useState<VictimaLite | null>(
     null,
   );
-  const [gardenSlots, setGardenSlots] = useState<GardenSlot[]>(
-    Array.from({ length: GARDEN_SLOTS }, (_, idx) => ({
-      id: idx,
-      victimId: null,
-      showPortrait: false,
-    })),
-  );
+  const [wallSeed, setWallSeed] = useState(1);
+  const [activeStatMessage, setActiveStatMessage] = useState(0);
+  const [showActiveStatMessage, setShowActiveStatMessage] = useState(true);
 
-  const victimMap = useMemo(
-    () => new Map(victims.map((victim) => [victim.id, victim])),
-    [victims],
-  );
+  const wallTiles = useMemo<Array<VictimaLite | null>>(() => {
+    if (!victims.length) {
+      return Array.from({ length: WALL_VISIBLE_TILES }, () => null);
+    }
+
+    const shuffled = shuffleWithSeed(victims, wallSeed);
+    return Array.from({ length: WALL_VISIBLE_TILES }, (_, idx) => {
+      const victimIndex = (idx * 7 + wallSeed * 5) % shuffled.length;
+      return shuffled[victimIndex];
+    });
+  }, [victims, wallSeed]);
+
+  const isActiveMessage = (index: number) =>
+    activeStatMessage === index && showActiveStatMessage;
+
+  useEffect(() => {
+    if (!victims.length) return;
+    const timer = window.setInterval(() => {
+      setWallSeed((prev) => prev + 1);
+    }, 6500);
+
+    return () => window.clearInterval(timer);
+  }, [victims]);
+
+  useEffect(() => {
+    const messageFadeMs = 700;
+    const messageVisibleMs = 8000;
+    const messageStepMs = messageFadeMs + messageVisibleMs;
+    let fadeTimer: number | undefined;
+
+    const sequenceTimer = window.setInterval(() => {
+      setShowActiveStatMessage(false);
+
+      fadeTimer = window.setTimeout(() => {
+        setActiveStatMessage((prev) => (prev + 1) % 3);
+        setShowActiveStatMessage(true);
+      }, messageFadeMs);
+    }, messageStepMs);
+
+    return () => {
+      window.clearInterval(sequenceTimer);
+      if (fadeTimer) window.clearTimeout(fadeTimer);
+    };
+  }, []);
 
   useEffect(() => {
     if (introShownInCurrentRuntime) return;
@@ -189,48 +252,6 @@ export default function Home() {
         // Silently handle errors
       });
   }, []);
-
-  useEffect(() => {
-    if (!victims.length) return;
-
-    setGardenSlots(
-      Array.from({ length: GARDEN_SLOTS }, (_, idx) => {
-        const randomVictim =
-          victims[Math.floor(Math.random() * victims.length)];
-        return {
-          id: idx,
-          victimId: randomVictim.id,
-          showPortrait: Math.random() > 0.35,
-        };
-      }),
-    );
-  }, [victims]);
-
-  useEffect(() => {
-    if (!victims.length) return;
-
-    const timer = setInterval(() => {
-      setGardenSlots((prev) => {
-        const next = [...prev];
-        const changes = 1 + Math.floor(Math.random() * 2);
-
-        for (let i = 0; i < changes; i += 1) {
-          const slotIndex = Math.floor(Math.random() * next.length);
-          const randomVictim =
-            victims[Math.floor(Math.random() * victims.length)];
-          next[slotIndex] = {
-            ...next[slotIndex],
-            victimId: randomVictim.id,
-            showPortrait: Math.random() > 0.28,
-          };
-        }
-
-        return next;
-      });
-    }, 1900);
-
-    return () => clearInterval(timer);
-  }, [victims]);
 
   useEffect(() => {
     const elements = document.querySelectorAll("[data-reveal]");
@@ -334,111 +355,171 @@ export default function Home() {
       <main
         className={`mx-auto w-full max-w-7xl px-4 py-12 transition-opacity duration-700 sm:px-8 ${showIntroCover ? "opacity-0" : "opacity-100"}`}
       >
-        <section data-reveal className="mt-12 grid gap-6 sm:grid-cols-3">
-          <Card className="stagger-item">
-            <CardHeader>
-              <p className="text-xs uppercase tracking-[0.14em] text-[#8f614d]">
-                {t.home.victimsRegistered}
+        <section data-reveal className="mt-12">
+          <div className="meaning-layout w-full rounded-3xl">
+            <aside className="reflection-card reflection-card-light">
+              <h3 className="reflection-title">Espacio de Reflexión</h3>
+              <p className="reflection-highlight">
+                "En la memoria habita la esperanza. En la verdad, la dignidad.
+                En el amor, la paz que sana."
               </p>
-              <CardTitle className="mt-2 text-4xl font-bold text-[var(--brand-strong)]">
-                {stats.victimas}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-soft text-sm">{t.home.documentsDesc}</p>
-            </CardContent>
-          </Card>
+              <p>
+                Este santuario digital es un lugar sagrado donde las historias
+                viven, donde los nombres resuenan, donde la luz nunca se apaga.
+              </p>
+              <p>
+                Cada visita es un acto de memoria. Cada recuerdo compartido es
+                un paso hacia la verdad. Cada vela encendida es una promesa de
+                no olvidar.
+              </p>
+              <p className="reflection-closing">Que la memoria sea eterna.</p>
+            </aside>
 
-          <Card className="stagger-item">
-            <CardHeader>
-              <p className="text-xs uppercase tracking-[0.14em] text-[#8f614d]">
-                {t.home.testimonies}
-              </p>
-              <CardTitle className="mt-2 text-4xl font-bold text-[var(--brand-strong)]">
-                {stats.testimonios}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-soft text-sm">{t.home.familyDesc}</p>
-            </CardContent>
-          </Card>
+            <section className="meaning-stats w-full rounded-3xl p-6 sm:p-10">
+              <div className="meaning-stats-grid">
+                <article className="meaning-stat-card group">
+                  <div className="meaning-stat-icon-wrap">
+                    <Heart className="h-6 w-6" fill="currentColor" />
+                  </div>
+                  <p className="meaning-stat-label">Victimas registradas</p>
+                  <p className="meaning-stat-number">
+                    <AnimatedCount value={stats.victimas} />
+                  </p>
+                  <p
+                    className={`meaning-stat-hover speech-bubble ${activeStatMessage === 0 && showActiveStatMessage ? "is-active" : ""}`}
+                    style={{
+                      opacity: isActiveMessage(0) ? 1 : 0,
+                      transform: isActiveMessage(0)
+                        ? "translateY(0)"
+                        : "translateY(4px)",
+                    }}
+                  >
+                    El amor de las familias que nunca abandonan la busqueda.
+                  </p>
+                </article>
 
-          <Card className="stagger-item">
-            <CardHeader>
-              <p className="text-xs uppercase tracking-[0.14em] text-[#8f614d]">
-                {t.home.memoryPlaces}
-              </p>
-              <CardTitle className="mt-2 text-4xl font-bold text-[var(--brand-strong)]">
-                {stats.lugares}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-soft text-sm">{t.home.sitesDesc}</p>
-            </CardContent>
-          </Card>
+                <article className="meaning-stat-card group">
+                  <div className="meaning-stat-icon-wrap">
+                    <Flower2 className="h-6 w-6" />
+                  </div>
+                  <p className="meaning-stat-label">Testimonios compartidos</p>
+                  <p className="meaning-stat-number">
+                    <AnimatedCount value={stats.testimonios} />
+                  </p>
+                  <p
+                    className={`meaning-stat-hover speech-bubble ${activeStatMessage === 1 && showActiveStatMessage ? "is-active" : ""}`}
+                    style={{
+                      opacity: isActiveMessage(1) ? 1 : 0,
+                      transform: isActiveMessage(1)
+                        ? "translateY(0)"
+                        : "translateY(4px)",
+                    }}
+                  >
+                    La esperanza florece cuando una voz se convierte en memoria
+                    viva.
+                  </p>
+                </article>
+
+                <article className="meaning-stat-card group">
+                  <div className="meaning-stat-icon-wrap">
+                    <Flame className="h-6 w-6" />
+                  </div>
+                  <p className="meaning-stat-label">Hechos georreferenciados</p>
+                  <p className="meaning-stat-number">
+                    <AnimatedCount value={stats.lugares} />
+                  </p>
+                  <p
+                    className={`meaning-stat-hover speech-bubble ${activeStatMessage === 2 && showActiveStatMessage ? "is-active" : ""}`}
+                    style={{
+                      opacity: isActiveMessage(2) ? 1 : 0,
+                      transform: isActiveMessage(2)
+                        ? "translateY(0)"
+                        : "translateY(4px)",
+                    }}
+                  >
+                    Cada lugar nombrado es un paso hacia la paz y la verdad.
+                  </p>
+                </article>
+              </div>
+            </section>
+          </div>
         </section>
+      </main>
 
-        <section
-          data-reveal
-          className="garden-section mt-16 rounded-3xl p-8 sm:p-12"
-        >
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-[#8f614d]">
-                Memoria viva
-              </p>
-              <h2 className="section-title mt-2 text-3xl sm:text-4xl">
-                {t.home.gardenTitle}
+      <section
+        data-reveal
+        className="light-wall-section mt-16 w-full px-3 py-10 sm:px-5 sm:py-14"
+      >
+        <div className="mx-auto w-full max-w-[1700px] light-wall-layout">
+          <div className="light-wall-main">
+            <div className="text-center">
+              <div className="light-wall-icon" aria-hidden="true">
+                ◌
+              </div>
+              <h2 className="light-wall-title text-4xl sm:text-5xl">
+                Muro de Luz
               </h2>
+              <p className="light-wall-subtitle mx-auto mt-4 max-w-3xl text-base sm:text-lg">
+                Cada vela encendida es una oración, un recuerdo, una promesa de
+                no olvidar. La luz vence a la oscuridad del olvido.
+              </p>
             </div>
-            <p className="text-soft max-w-xl text-sm sm:text-right sm:text-base">
-              {t.home.gardenHint}
+
+            <div className="soul-cloud mt-8 w-full">
+              {wallTiles.map((victim, idx) => {
+                const fullName = victim
+                  ? `${victim.nombres} ${victim.apellidos}`
+                  : "Espacio conmemorativo";
+                const candleDuration = 1.2 + (idx % 9) * 0.22;
+                const candleDelay = (idx % 17) * 0.09;
+
+                return (
+                  <motion.button
+                    key={victim ? `${victim.id}-${idx}` : `placeholder-${idx}`}
+                    type="button"
+                    onClick={() => victim && setSelectedVictim(victim)}
+                    className={`soul-tile ${victim ? "" : "is-empty"}`}
+                    disabled={!victim}
+                    aria-label={`Abrir tributo de ${fullName}`}
+                    whileHover={victim ? { y: -2, scale: 1.08 } : undefined}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                  >
+                    <div className="soul-tile-media">
+                      <motion.span
+                        className="soul-candle"
+                        aria-hidden="true"
+                        animate={{
+                          opacity: [0.35, 0.96, 0.52, 0.88],
+                          scale: [1, 1.12, 0.94, 1],
+                        }}
+                        transition={{
+                          duration: candleDuration,
+                          delay: candleDelay,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        🕯
+                      </motion.span>
+                      {victim && (
+                        <span className="soul-tooltip">{fullName}</span>
+                      )}
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+
+            <p className="light-wall-quote mt-10">
+              "La memoria es la luz que ilumina el camino hacia la verdad"
             </p>
           </div>
+        </div>
+      </section>
 
-          <p className="text-soft mt-4 max-w-3xl leading-relaxed">
-            {t.home.gardenSubtitle}
-          </p>
-
-          <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {gardenSlots.map((slot) => {
-              const victim = slot.victimId
-                ? victimMap.get(slot.victimId)
-                : null;
-              return (
-                <button
-                  key={slot.id}
-                  type="button"
-                  onClick={() => victim && setSelectedVictim(victim)}
-                  className="garden-tile"
-                  aria-label={
-                    victim
-                      ? `${victim.nombres} ${victim.apellidos}`
-                      : "Vela conmemorativa"
-                  }
-                >
-                  <div
-                    className={`garden-tile-inner ${slot.showPortrait && victim ? "show-portrait" : "show-candle"}`}
-                  >
-                    {slot.showPortrait && victim ? (
-                      <img
-                        src={buildPortraitData(victim)}
-                        alt={`${victim.nombres} ${victim.apellidos}`}
-                        className="garden-portrait"
-                      />
-                    ) : (
-                      <div className="garden-candle" aria-hidden="true">
-                        🕯️
-                      </div>
-                    )}
-                  </div>
-                  <div className="garden-tile-overlay" />
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
+      <main
+        className={`mx-auto w-full max-w-7xl px-4 py-12 sm:px-8 ${showIntroCover ? "opacity-0" : "opacity-100"}`}
+      >
         <section
           data-reveal
           className="mt-16 surface-panel rounded-3xl p-8 sm:p-12"
@@ -507,41 +588,58 @@ export default function Home() {
 
       {selectedVictim && (
         <div className="garden-modal-backdrop" role="dialog" aria-modal="true">
-          <div className="garden-modal-card">
-            <button
-              type="button"
-              className="garden-modal-close"
-              onClick={() => setSelectedVictim(null)}
-            >
-              {t.home.close}
-            </button>
+          <div className="tribute-modal-card">
+            <div className="tribute-modal-media">
+              {getVictimPhoto(selectedVictim) ? (
+                <img
+                  src={getVictimPhoto(selectedVictim) as string}
+                  alt={`${selectedVictim.nombres} ${selectedVictim.apellidos}`}
+                  className="tribute-modal-image"
+                />
+              ) : (
+                <div className="tribute-modal-placeholder" aria-hidden="true" />
+              )}
+              <div className="tribute-modal-media-glow" aria-hidden="true" />
+            </div>
 
-            <img
-              src={buildPortraitData(selectedVictim)}
-              alt={`${selectedVictim.nombres} ${selectedVictim.apellidos}`}
-              className="garden-modal-image"
-            />
+            <div className="tribute-modal-content">
+              <button
+                type="button"
+                className="garden-modal-close"
+                onClick={() => setSelectedVictim(null)}
+              >
+                {t.home.close}
+              </button>
 
-            <h3 className="section-title mt-5 text-3xl">
-              {selectedVictim.nombres} {selectedVictim.apellidos}
-            </h3>
+              <h3 className="tribute-modal-title">
+                {selectedVictim.nombres} {selectedVictim.apellidos}
+              </h3>
 
-            <div className="mt-5 space-y-2 text-sm text-[#4d5b52]">
-              <p>
-                <strong>{t.home.gardenModalMunicipality}:</strong>{" "}
-                {selectedVictim.municipio || "-"}
-              </p>
-              <p>
-                <strong>{t.home.gardenModalDepartment}:</strong>{" "}
-                {selectedVictim.departamento || "-"}
-              </p>
-              <p>
-                <strong>{t.home.gardenModalDisappearance}:</strong>{" "}
-                {formatDate(selectedVictim.fecha_desaparicion)}
-              </p>
-              <p>
-                <strong>{t.home.gardenModalStatus}:</strong>{" "}
-                {selectedVictim.estado_busqueda || "-"}
+              <div className="tribute-museum-card mt-6">
+                <div className="tribute-museum-row">
+                  <span>{t.home.gardenModalMunicipality}</span>
+                  <strong>{selectedVictim.municipio || "-"}</strong>
+                </div>
+                <div className="tribute-museum-row">
+                  <span>{t.home.gardenModalDepartment}</span>
+                  <strong>{selectedVictim.departamento || "-"}</strong>
+                </div>
+                <div className="tribute-museum-row">
+                  <span>{t.home.gardenModalDisappearance}</span>
+                  <strong>
+                    {formatDate(selectedVictim.fecha_desaparicion)}
+                  </strong>
+                </div>
+                <div className="tribute-museum-row">
+                  <span>{t.home.gardenModalStatus}</span>
+                  <strong>{selectedVictim.estado_busqueda || "-"}</strong>
+                </div>
+              </div>
+
+              <p className="tribute-modal-copy mt-7">
+                Este espacio conserva su presencia en la memoria colectiva. Cada
+                nombre es una historia viva que reclama verdad, dignidad y
+                esperanza para su familia y su territorio.
               </p>
             </div>
           </div>
