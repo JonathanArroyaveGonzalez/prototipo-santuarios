@@ -54,6 +54,192 @@ body {
   animation: hero-enter 560ms cubic-bezier(0.19, 1, 0.22, 1);
 }
 
+.home-intro-cover {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  overflow: hidden;
+  background: #050806;
+}
+
+.home-intro-left,
+.home-intro-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  background-image: linear-gradient(180deg, rgba(4, 8, 6, 0.08), rgba(4, 8, 6, 0.2)), url('/home-page.png');
+  background-size: 100vw 100vh;
+  background-repeat: no-repeat;
+  transition: transform 1000ms cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.home-intro-left {
+  left: 0;
+  background-position: left center;
+}
+
+.home-intro-right {
+  right: 0;
+  background-position: right center;
+}
+
+.home-intro-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.28));
+}
+
+.home-intro-cover.is-opening .home-intro-left {
+  transform: translateX(-102%);
+}
+
+.home-intro-cover.is-opening .home-intro-right {
+  transform: translateX(102%);
+}
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(22px);
+  filter: blur(8px);
+  transition: opacity 700ms ease, transform 700ms ease, filter 700ms ease;
+}
+
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+.case-hero {
+  isolation: isolate;
+}
+
+.case-hero::before {
+  content: "";
+  position: absolute;
+  inset: -30% -10% auto -10%;
+  height: 80%;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 16% 30%, rgba(56, 102, 83, 0.2), transparent 42%),
+    radial-gradient(circle at 80% 42%, rgba(178, 145, 111, 0.28), transparent 40%),
+    linear-gradient(115deg, rgba(255, 253, 248, 0.92), rgba(239, 242, 237, 0.74));
+  animation: case-pan 16s ease-in-out infinite alternate;
+}
+
+.memorial-divider {
+  position: absolute;
+  left: 0;
+  top: 26px;
+  width: 220px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(178, 145, 111, 0), rgba(178, 145, 111, 0.9), rgba(178, 145, 111, 0));
+  transform-origin: left;
+  animation: divider-grow 1.1s 220ms ease forwards;
+}
+
+.garden-section {
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(155deg, #fffdf9 0%, #f1ebe2 100%);
+  box-shadow: 0 16px 36px -24px rgba(38, 56, 45, 0.35);
+}
+
+.garden-tile {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 20px;
+  border: 1px solid rgba(178, 145, 111, 0.4);
+  overflow: hidden;
+  background: linear-gradient(150deg, #223a30 0%, #304f40 65%, #47695a 100%);
+  box-shadow: 0 12px 24px -16px rgba(25, 39, 32, 0.75);
+  transition: transform 260ms ease, box-shadow 260ms ease, border-color 260ms ease;
+}
+
+.garden-tile:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: rgba(224, 193, 150, 0.8);
+  box-shadow: 0 18px 30px -16px rgba(20, 29, 24, 0.85);
+}
+
+.garden-tile-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.garden-candle {
+  font-size: clamp(2.2rem, 3.6vw, 3.2rem);
+  filter: drop-shadow(0 0 10px rgba(255, 192, 108, 0.65));
+  animation: candle-flicker 2s ease-in-out infinite;
+}
+
+.garden-portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.garden-tile-inner.show-candle {
+  animation: fade-in-candle 450ms ease;
+}
+
+.garden-tile-inner.show-portrait {
+  animation: fade-in-portrait 520ms ease;
+}
+
+.garden-tile-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.36), rgba(0, 0, 0, 0.04));
+  pointer-events: none;
+}
+
+.garden-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 18, 16, 0.66);
+  backdrop-filter: blur(4px);
+  padding: 1rem;
+}
+
+.garden-modal-card {
+  width: min(520px, 100%);
+  border-radius: 24px;
+  background: #fffcf7;
+  border: 1px solid rgba(178, 145, 111, 0.35);
+  padding: 1.4rem;
+  box-shadow: 0 24px 44px -22px rgba(7, 14, 11, 0.72);
+  animation: modal-rise 260ms ease;
+}
+
+.garden-modal-close {
+  border: 1px solid rgba(178, 145, 111, 0.42);
+  background: #f4eadb;
+  color: #2e4739;
+  padding: 0.42rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.garden-modal-image {
+  margin-top: 1rem;
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 1px solid rgba(178, 145, 111, 0.35);
+}
+
 .stagger-item {
   opacity: 0;
   animation: card-enter 500ms ease-out forwards;
@@ -89,6 +275,72 @@ body {
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+@keyframes case-pan {
+  from {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(2%, 1.5%, 0) scale(1.04);
+  }
+}
+
+@keyframes divider-grow {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes candle-flicker {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(-1px) scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in-candle {
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fade-in-portrait {
+  from {
+    opacity: 0;
+    transform: scale(1.08);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes modal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
