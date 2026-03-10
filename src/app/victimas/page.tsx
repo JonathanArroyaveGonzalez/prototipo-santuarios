@@ -7,6 +7,25 @@ import { formatDate } from "@/lib/utils";
 import type { Victima } from "@/types";
 import { useLanguage } from "@/lib/language-context";
 
+function buildVictimPhoto(victima: Victima) {
+  const initials = `${victima.nombres?.charAt(0) ?? ""}${victima.apellidos?.charAt(0) ?? ""}`.toUpperCase();
+  const fullName = `${victima.nombres} ${victima.apellidos}`;
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 240'>
+    <defs>
+      <linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'>
+        <stop offset='0%' stop-color='#274338'/>
+        <stop offset='100%' stop-color='#b2916f'/>
+      </linearGradient>
+    </defs>
+    <rect width='100%' height='100%' fill='url(#bg)' />
+    <circle cx='180' cy='105' r='56' fill='rgba(255,255,255,0.18)' />
+    <text x='180' y='122' text-anchor='middle' fill='#fff8ec' font-size='52' font-family='Georgia, serif'>${initials}</text>
+    <rect x='22' y='184' width='316' height='34' rx='8' fill='rgba(0,0,0,0.24)' />
+    <text x='180' y='206' text-anchor='middle' fill='#fdf4e4' font-size='16' font-family='Arial, sans-serif'>${fullName}</text>
+  </svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
 export default function VictimasPage() {
   const { t } = useLanguage();
   const [victimas, setVictimas] = useState<Victima[]>([]);
@@ -109,6 +128,11 @@ export default function VictimasPage() {
             <Link key={victima.id} href={`/victimas/${victima.id}`}>
               <Card className="transition-all hover:shadow-lg cursor-pointer">
                 <CardContent>
+                  <img
+                    src={buildVictimPhoto(victima)}
+                    alt={`${victima.nombres} ${victima.apellidos}`}
+                    className="mb-4 h-40 w-full rounded-xl border border-[var(--line)] object-cover"
+                  />
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-semibold text-lg text-[var(--brand-strong)]">
