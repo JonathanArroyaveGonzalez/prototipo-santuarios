@@ -3,15 +3,24 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Testimonio } from "@/types";
+import { useLanguage } from "@/lib/language-context";
 
 export default function TestimoniosPage() {
+  const { t } = useLanguage();
   const [testimonios, setTestimonios] = useState<Testimonio[]>([]);
   const [tipoFilter, setTipoFilter] = useState("");
 
   useEffect(() => {
     fetch("/api/testimonios")
-      .then((r) => r.json())
-      .then(setTestimonios);
+      .then((r) => {
+        if (!r.ok) throw new Error('API error');
+        return r.json();
+      })
+      .then(setTestimonios)
+      .catch(() => {
+        // Silently handle errors - API might not be available
+        setTestimonios([]);
+      });
   }, []);
 
   const filteredTestimonios = tipoFilter
@@ -23,29 +32,28 @@ export default function TestimoniosPage() {
       <main className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-8">
         <section className="hero-appear surface-panel rounded-3xl p-8">
           <h1 className="section-title text-4xl sm:text-5xl">
-            Testimonios de Memoria
+            {t.testimoniesPage.title}
           </h1>
           <p className="text-soft mt-4 max-w-3xl text-lg">
-            Voces de familiares, sobrevivientes y comunidad que mantienen viva 
-            la memoria de las víctimas de desaparición.
+            {t.testimoniesPage.subtitle}
           </p>
         </section>
 
         <section className="mt-8 surface-panel rounded-2xl p-6">
           <div className="flex flex-wrap items-center gap-4">
-            <label className="text-sm font-medium">Filtrar por tipo:</label>
+            <label className="text-sm font-medium">{t.testimoniesPage.filterByType}</label>
             <select
               value={tipoFilter}
               onChange={(e) => setTipoFilter(e.target.value)}
               className="rounded-xl border border-[var(--line)] bg-white px-4 py-2 text-sm"
             >
-              <option value="">Todos los testimonios</option>
-              <option value="texto">Texto</option>
-              <option value="audio">Audio</option>
-              <option value="video">Video</option>
+              <option value="">{t.testimoniesPage.allTestimonies}</option>
+              <option value="texto">{t.testimoniesPage.text}</option>
+              <option value="audio">{t.testimoniesPage.audio}</option>
+              <option value="video">{t.testimoniesPage.video}</option>
             </select>
             <span className="text-soft text-sm">
-              Mostrando {filteredTestimonios.length} testimonios
+              {t.testimoniesPage.showing} {filteredTestimonios.length} {t.testimoniesPage.testimonies}
             </span>
           </div>
         </section>
@@ -70,7 +78,7 @@ export default function TestimoniosPage() {
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm font-medium text-[var(--brand-strong)]">
-                      Víctima:
+                      {t.testimoniesPage.victim}
                     </p>
                     <p className="text-soft text-sm">
                       {testimonio.victimas.nombres} {testimonio.victimas.apellidos}
@@ -78,7 +86,7 @@ export default function TestimoniosPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-[var(--brand-strong)]">
-                      Lugar:
+                      {t.testimoniesPage.place}
                     </p>
                     <p className="text-soft text-sm">
                       {testimonio.lugares.nombre} ({testimonio.lugares.tipo})
@@ -110,7 +118,7 @@ export default function TestimoniosPage() {
         {filteredTestimonios.length === 0 && (
           <div className="mt-12 text-center">
             <p className="text-soft text-lg">
-              No se encontraron testimonios con los filtros seleccionados
+              {t.testimoniesPage.noTestimonies}
             </p>
           </div>
         )}

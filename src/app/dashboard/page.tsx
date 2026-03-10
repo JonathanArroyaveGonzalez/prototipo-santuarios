@@ -1,8 +1,9 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { LayoutDashboard, Users, MapPin, FileText, Upload, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, Users, MapPin, FileText, Upload, LogOut, Menu, X, Globe } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/lib/language-context";
 
 type Victima = {
   id: number;
@@ -35,13 +36,14 @@ type Testimonio = {
 };
 
 export default function DashboardPage() {
+  const { t, language, setLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [victimas, setVictimas] = useState<Victima[]>([]);
   const [lugares, setLugares] = useState<Lugar[]>([]);
   const [medios, setMedios] = useState<Medio[]>([]);
   const [testimonios, setTestimonios] = useState<Testimonio[]>([]);
-  const [status, setStatus] = useState("Sistema listo");
+  const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [victimaForm, setVictimaForm] = useState({
@@ -62,6 +64,10 @@ export default function DashboardPage() {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [mediaType, setMediaType] = useState("documento");
+
+  useEffect(() => {
+    setStatus(t.dashboard.status);
+  }, [t]);
 
   useEffect(() => {
     refreshData();
@@ -88,9 +94,9 @@ export default function DashboardPage() {
       setLugares(lugaresData);
       setMedios(mediosData);
       setTestimonios(testimoniosData);
-      setStatus("Datos actualizados");
+      setStatus(t.dashboard.dataUpdated);
     } catch {
-      setStatus("Error al cargar datos");
+      setStatus(t.dashboard.errorLoading);
     } finally {
       setLoading(false);
     }
@@ -98,7 +104,7 @@ export default function DashboardPage() {
 
   async function handleCreateVictima(event: FormEvent) {
     event.preventDefault();
-    setStatus("Creando víctima...");
+    setStatus(t.dashboard.creatingVictim);
 
     const response = await fetch("/api/victimas", {
       method: "POST",
@@ -107,11 +113,11 @@ export default function DashboardPage() {
     });
 
     if (!response.ok) {
-      setStatus("Error al crear víctima");
+      setStatus(t.dashboard.errorCreatingVictim);
       return;
     }
 
-    setStatus("Víctima creada exitosamente");
+    setStatus(t.dashboard.victimCreated);
     setVictimaForm({
       nombres: "",
       apellidos: "",
@@ -125,11 +131,11 @@ export default function DashboardPage() {
   async function handleUploadFile(event: FormEvent) {
     event.preventDefault();
     if (!selectedFile) {
-      setStatus("Selecciona un archivo");
+      setStatus(t.dashboard.selectFile);
       return;
     }
 
-    setStatus("Subiendo archivo...");
+    setStatus(t.dashboard.uploadingFile);
 
     const formData = new FormData();
     formData.append("file", selectedFile);
@@ -142,18 +148,18 @@ export default function DashboardPage() {
     });
 
     if (!response.ok) {
-      setStatus("Error al subir archivo");
+      setStatus(t.dashboard.errorUploadingFile);
       return;
     }
 
-    setStatus("Archivo subido exitosamente");
+    setStatus(t.dashboard.fileUploaded);
     setSelectedFile(null);
     await refreshData();
   }
 
   async function handleCreateTestimonio(event: FormEvent) {
     event.preventDefault();
-    setStatus("Creando testimonio...");
+    setStatus(t.dashboard.creatingTestimony);
 
     const payload = {
       victima_id: Number(testimonioForm.victima_id),
@@ -170,11 +176,11 @@ export default function DashboardPage() {
     });
 
     if (!response.ok) {
-      setStatus("Error al crear testimonio");
+      setStatus(t.dashboard.errorCreatingTestimony);
       return;
     }
 
-    setStatus("Testimonio registrado exitosamente");
+    setStatus(t.dashboard.testimonyCreated);
     setTestimonioForm({
       victima_id: "",
       lugar_id: "",
@@ -186,10 +192,10 @@ export default function DashboardPage() {
   }
 
   const menuItems = [
-    { id: "overview", label: "Resumen", icon: LayoutDashboard },
-    { id: "victimas", label: "Víctimas", icon: Users },
-    { id: "medios", label: "Medios", icon: Upload },
-    { id: "testimonios", label: "Testimonios", icon: FileText },
+    { id: "overview", label: t.dashboard.overview, icon: LayoutDashboard },
+    { id: "victimas", label: t.dashboard.victims, icon: Users },
+    { id: "medios", label: t.dashboard.media, icon: Upload },
+    { id: "testimonios", label: t.dashboard.testimonies, icon: FileText },
   ];
 
   return (
@@ -197,7 +203,7 @@ export default function DashboardPage() {
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-[var(--line)] transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div className="flex items-center justify-between h-16 px-6 border-b border-[var(--line)]">
-          <h2 className="section-title text-lg text-[var(--brand-strong)]">Panel Admin</h2>
+          <h2 className="section-title text-lg text-[var(--brand-strong)]">{t.dashboard.title}</h2>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden">
             <X className="w-5 h-5" />
           </button>
@@ -224,15 +230,22 @@ export default function DashboardPage() {
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[var(--line)]">
-          <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[var(--ink-soft)] hover:bg-[var(--surface)] transition">
+          <button
+            onClick={() => {
+              sessionStorage.removeItem("authenticated");
+              sessionStorage.removeItem("user");
+              window.location.href = "/";
+            }}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[var(--ink-soft)] hover:bg-[var(--surface)] transition w-full"
+          >
             <LogOut className="w-5 h-5" />
-            Salir
-          </Link>
+            {t.dashboard.exit}
+          </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className="lg:pl-64">
+      <div className="lg:ml-64">
         {/* Top Bar */}
         <header className="sticky top-0 z-40 h-16 bg-white border-b border-[var(--line)] flex items-center justify-between px-4 sm:px-6">
           <button onClick={() => setSidebarOpen(true)} className="lg:hidden">
@@ -240,6 +253,13 @@ export default function DashboardPage() {
           </button>
           
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => setLanguage(language === "es" ? "en" : "es")}
+              className="flex items-center gap-1 rounded-full bg-[var(--surface)] px-3 py-1.5 text-xs font-medium transition hover:bg-[var(--line)]"
+            >
+              <Globe className="h-3.5 w-3.5" />
+              {language.toUpperCase()}
+            </button>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--surface)] text-xs font-medium">
               <div className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-500' : 'bg-green-500'}`} />
               {status}
@@ -249,7 +269,7 @@ export default function DashboardPage() {
               disabled={loading}
               className="px-4 py-2 rounded-xl bg-[var(--brand)] text-white text-sm font-medium hover:bg-[var(--brand-strong)] disabled:opacity-50 transition"
             >
-              Actualizar
+              {t.dashboard.refresh}
             </button>
           </div>
         </header>
@@ -260,26 +280,26 @@ export default function DashboardPage() {
             <>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="surface-panel rounded-2xl p-5">
-                  <p className="text-xs uppercase tracking-wider text-[var(--ink-soft)]">Víctimas</p>
+                  <p className="text-xs uppercase tracking-wider text-[var(--ink-soft)]">{t.dashboard.victims}</p>
                   <p className="mt-2 text-3xl font-bold text-[var(--brand-strong)]">{victimas.length}</p>
                 </div>
                 <div className="surface-panel rounded-2xl p-5">
-                  <p className="text-xs uppercase tracking-wider text-[var(--ink-soft)]">Medios</p>
+                  <p className="text-xs uppercase tracking-wider text-[var(--ink-soft)]">{t.dashboard.media}</p>
                   <p className="mt-2 text-3xl font-bold text-[var(--brand-strong)]">{medios.length}</p>
                 </div>
                 <div className="surface-panel rounded-2xl p-5">
-                  <p className="text-xs uppercase tracking-wider text-[var(--ink-soft)]">Testimonios</p>
+                  <p className="text-xs uppercase tracking-wider text-[var(--ink-soft)]">{t.dashboard.testimonies}</p>
                   <p className="mt-2 text-3xl font-bold text-[var(--brand-strong)]">{testimonios.length}</p>
                 </div>
                 <div className="surface-panel rounded-2xl p-5">
-                  <p className="text-xs uppercase tracking-wider text-[var(--ink-soft)]">Lugares</p>
+                  <p className="text-xs uppercase tracking-wider text-[var(--ink-soft)]">{t.dashboard.places}</p>
                   <p className="mt-2 text-3xl font-bold text-[var(--brand-strong)]">{lugares.length}</p>
                 </div>
               </div>
 
               <div className="grid gap-6 lg:grid-cols-2">
                 <div className="surface-panel rounded-2xl p-6">
-                  <h3 className="section-title text-xl mb-4">Víctimas Recientes</h3>
+                  <h3 className="section-title text-xl mb-4">{t.dashboard.recentVictims}</h3>
                   <div className="space-y-2">
                     {victimas.slice(0, 5).map((v) => (
                       <div key={v.id} className="flex items-center justify-between p-3 rounded-xl bg-white border border-[var(--line)]">
@@ -291,7 +311,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="surface-panel rounded-2xl p-6">
-                  <h3 className="section-title text-xl mb-4">Testimonios Recientes</h3>
+                  <h3 className="section-title text-xl mb-4">{t.dashboard.recentTestimonies}</h3>
                   <div className="space-y-2">
                     {testimonios.slice(0, 5).map((t) => (
                       <div key={t.id} className="p-3 rounded-xl bg-white border border-[var(--line)]">
@@ -307,11 +327,11 @@ export default function DashboardPage() {
 
           {activeTab === "victimas" && (
             <div className="surface-panel rounded-2xl p-6">
-              <h2 className="section-title text-2xl mb-6">Crear Nueva Víctima</h2>
+              <h2 className="section-title text-2xl mb-6">{t.dashboard.createVictim}</h2>
               <form onSubmit={handleCreateVictima} className="space-y-4 max-w-2xl">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Nombres</label>
+                    <label className="block text-sm font-medium mb-2">{t.dashboard.firstName}</label>
                     <input
                       required
                       value={victimaForm.nombres}
@@ -320,7 +340,7 @@ export default function DashboardPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Apellidos</label>
+                    <label className="block text-sm font-medium mb-2">{t.dashboard.lastName}</label>
                     <input
                       required
                       value={victimaForm.apellidos}
@@ -330,7 +350,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Fecha de Desaparición</label>
+                  <label className="block text-sm font-medium mb-2">{t.dashboard.disappearanceDate}</label>
                   <input
                     required
                     type="date"
@@ -341,7 +361,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Departamento</label>
+                    <label className="block text-sm font-medium mb-2">{t.dashboard.department}</label>
                     <input
                       required
                       value={victimaForm.departamento}
@@ -350,7 +370,7 @@ export default function DashboardPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Municipio</label>
+                    <label className="block text-sm font-medium mb-2">{t.dashboard.municipality}</label>
                     <input
                       required
                       value={victimaForm.municipio}
@@ -360,7 +380,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <button className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[var(--brand)] text-white font-medium hover:bg-[var(--brand-strong)] transition">
-                  Crear Víctima
+                  {t.dashboard.createVictimBtn}
                 </button>
               </form>
             </div>
@@ -368,23 +388,23 @@ export default function DashboardPage() {
 
           {activeTab === "medios" && (
             <div className="surface-panel rounded-2xl p-6">
-              <h2 className="section-title text-2xl mb-6">Subir Archivo</h2>
+              <h2 className="section-title text-2xl mb-6">{t.dashboard.uploadFile}</h2>
               <form onSubmit={handleUploadFile} className="space-y-4 max-w-2xl">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Tipo de Medio</label>
+                  <label className="block text-sm font-medium mb-2">{t.dashboard.mediaType}</label>
                   <select
                     value={mediaType}
                     onChange={(e) => setMediaType(e.target.value)}
                     className="w-full rounded-xl border border-[var(--line)] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
                   >
-                    <option value="imagen">Imagen</option>
-                    <option value="video">Video</option>
-                    <option value="audio">Audio</option>
-                    <option value="documento">Documento</option>
+                    <option value="imagen">{t.dashboard.image}</option>
+                    <option value="video">{t.dashboard.video}</option>
+                    <option value="audio">{t.dashboard.audio}</option>
+                    <option value="documento">{t.dashboard.document}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Archivo</label>
+                  <label className="block text-sm font-medium mb-2">{t.dashboard.file}</label>
                   <input
                     type="file"
                     onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
@@ -392,7 +412,7 @@ export default function DashboardPage() {
                   />
                 </div>
                 <button className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[var(--accent)] text-white font-medium hover:bg-[#7f2f22] transition">
-                  Subir Archivo
+                  {t.dashboard.uploadBtn}
                 </button>
               </form>
             </div>
@@ -400,17 +420,17 @@ export default function DashboardPage() {
 
           {activeTab === "testimonios" && (
             <div className="surface-panel rounded-2xl p-6">
-              <h2 className="section-title text-2xl mb-6">Crear Testimonio</h2>
+              <h2 className="section-title text-2xl mb-6">{t.dashboard.createTestimony}</h2>
               <form onSubmit={handleCreateTestimonio} className="space-y-4 max-w-2xl">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Víctima</label>
+                  <label className="block text-sm font-medium mb-2">{t.dashboard.victim}</label>
                   <select
                     required
                     value={testimonioForm.victima_id}
                     onChange={(e) => setTestimonioForm((s) => ({ ...s, victima_id: e.target.value }))}
                     className="w-full rounded-xl border border-[var(--line)] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
                   >
-                    <option value="">Seleccionar víctima</option>
+                    <option value="">{t.dashboard.selectVictim}</option>
                     {victimas.map((v) => (
                       <option key={v.id} value={v.id}>
                         {v.nombres} {v.apellidos}
@@ -419,14 +439,14 @@ export default function DashboardPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Medio</label>
+                  <label className="block text-sm font-medium mb-2">{t.dashboard.medium}</label>
                   <select
                     required
                     value={testimonioForm.medio_id}
                     onChange={(e) => setTestimonioForm((s) => ({ ...s, medio_id: e.target.value }))}
                     className="w-full rounded-xl border border-[var(--line)] bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
                   >
-                    <option value="">Seleccionar medio</option>
+                    <option value="">{t.dashboard.selectMedium}</option>
                     {medios.map((m) => (
                       <option key={m.id} value={m.id}>
                         {m.tipo} - {m.nombre_archivo}
@@ -435,7 +455,7 @@ export default function DashboardPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Autor del Testimonio</label>
+                  <label className="block text-sm font-medium mb-2">{t.dashboard.testimonyAuthor}</label>
                   <input
                     required
                     value={testimonioForm.autor_nombre}
@@ -444,7 +464,7 @@ export default function DashboardPage() {
                   />
                 </div>
                 <button className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#2f6f55] text-white font-medium hover:bg-[#285d48] transition">
-                  Crear Testimonio
+                  {t.dashboard.createTestimonyBtn}
                 </button>
               </form>
             </div>

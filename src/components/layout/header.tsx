@@ -13,6 +13,7 @@ export function Header() {
   const { language, setLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -20,10 +21,14 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    setIsAuthenticated(!!sessionStorage.getItem("authenticated"));
+  }, [pathname]);
+
   const navItems = [
     { href: "/", label: t.nav.home },
     { href: "/victimas", label: t.nav.victims },
-    { href: "/mapa", label: t.nav.map },
+    { href: "/mapa", label: t.nav.memoryMap },
     { href: "/testimonios", label: t.nav.testimonies },
     { href: "/about", label: t.nav.about },
   ];
@@ -38,7 +43,7 @@ export function Header() {
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between">
           <div className="hidden lg:flex lg:gap-x-6 lg:items-center lg:flex-1">
-            {navItems.slice(0, 2).map((item) => (
+            {navItems.slice(0, 3).map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -67,7 +72,7 @@ export function Header() {
           </Link>
 
           <div className="hidden lg:flex lg:gap-x-6 lg:items-center lg:flex-1 lg:justify-end">
-            {navItems.slice(2).map((item) => (
+            {navItems.slice(3).map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -88,9 +93,9 @@ export function Header() {
               <Globe className="h-3.5 w-3.5" />
               {language.toUpperCase()}
             </button>
-            <Link href="/login">
+            <Link href={isAuthenticated ? "/dashboard" : "/login"}>
               <Button className="ml-2 bg-[#B2916F] text-white hover:bg-[#9a7d5f] shadow-lg hover:shadow-xl transition-all duration-300 border border-white/20">
-                {t.nav.login}
+                {isAuthenticated ? t.nav.dashboard : t.nav.login}
               </Button>
             </Link>
           </div>
@@ -131,9 +136,9 @@ export function Header() {
               <Globe className="h-4 w-4" />
               {language === "es" ? "English" : "Español"}
             </button>
-            <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+            <Link href={isAuthenticated ? "/dashboard" : "/login"} onClick={() => setMobileMenuOpen(false)}>
               <Button className="w-full mt-2 bg-[#B2916F] text-white hover:bg-[#9a7d5f]">
-                {t.nav.login}
+                {isAuthenticated ? t.nav.dashboard : t.nav.login}
               </Button>
             </Link>
           </div>

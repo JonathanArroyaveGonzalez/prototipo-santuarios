@@ -5,8 +5,10 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
 import type { Victima } from "@/types";
+import { useLanguage } from "@/lib/language-context";
 
 export default function VictimasPage() {
+  const { t } = useLanguage();
   const [victimas, setVictimas] = useState<Victima[]>([]);
   const [filteredVictimas, setFilteredVictimas] = useState<Victima[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,6 +21,9 @@ export default function VictimasPage() {
       .then((data) => {
         setVictimas(data);
         setFilteredVictimas(data);
+      })
+      .catch(() => {
+        // Silently handle errors
       });
   }, []);
 
@@ -52,7 +57,7 @@ export default function VictimasPage() {
       <main className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-8">
         <section className="hero-appear surface-panel rounded-3xl p-8">
           <h1 className="section-title text-4xl sm:text-5xl">
-            Víctimas de Desaparición
+            {t.victims.title}
           </h1>
           <p className="text-soft mt-4 max-w-3xl text-lg">
             Registro de personas desaparecidas en el Magdalena Caldense. 
@@ -64,7 +69,7 @@ export default function VictimasPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             <input
               type="text"
-              placeholder="Buscar por nombre..."
+              placeholder={t.victims.search}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full rounded-xl border border-[var(--line)] bg-white px-4 py-2 text-sm"
@@ -74,7 +79,7 @@ export default function VictimasPage() {
               onChange={(e) => setMunicipioFilter(e.target.value)}
               className="w-full rounded-xl border border-[var(--line)] bg-white px-4 py-2 text-sm"
             >
-              <option value="">Todos los municipios</option>
+              <option value="">{t.victims.allMunicipalities}</option>
               {municipios.map((m) => (
                 <option key={m} value={m}>
                   {m}
@@ -86,7 +91,7 @@ export default function VictimasPage() {
               onChange={(e) => setEstadoFilter(e.target.value)}
               className="w-full rounded-xl border border-[var(--line)] bg-white px-4 py-2 text-sm"
             >
-              <option value="">Todos los estados</option>
+              <option value="">{t.victims.allStates}</option>
               {estados.map((e) => (
                 <option key={e} value={e}>
                   {e}
@@ -95,7 +100,7 @@ export default function VictimasPage() {
             </select>
           </div>
           <p className="text-soft mt-4 text-sm">
-            Mostrando {filteredVictimas.length} de {victimas.length} víctimas
+            {t.victims.showing} {filteredVictimas.length} {t.victims.of} {victimas.length} {t.victims.title.toLowerCase()}
           </p>
         </section>
 
@@ -119,12 +124,12 @@ export default function VictimasPage() {
                   </div>
                   <div className="mt-4 space-y-1 text-sm text-[var(--ink-soft)]">
                     <p>
-                      <strong>Desaparición:</strong>{" "}
+                      <strong>{t.victims.disappearance}:</strong>{" "}
                       {formatDate(victima.fecha_desaparicion)}
                     </p>
                     {victima.edad_desaparicion && (
                       <p>
-                        <strong>Edad:</strong> {victima.edad_desaparicion} años
+                        <strong>{t.victims.age}:</strong> {victima.edad_desaparicion} {t.victims.years}
                       </p>
                     )}
                   </div>
@@ -137,7 +142,7 @@ export default function VictimasPage() {
         {filteredVictimas.length === 0 && (
           <div className="mt-12 text-center">
             <p className="text-soft text-lg">
-              No se encontraron víctimas con los filtros seleccionados
+              {t.victims.noVictims}
             </p>
           </div>
         )}

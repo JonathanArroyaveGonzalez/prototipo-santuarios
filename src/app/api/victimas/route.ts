@@ -15,20 +15,25 @@ type VictimaPayload = {
 };
 
 export async function GET() {
-  const victimas = await prisma.victimas.findMany({
-    orderBy: { id: "desc" },
-    include: {
-      usuarios: {
-        select: { id: true, nombre: true },
+  try {
+    const victimas = await prisma.victimas.findMany({
+      orderBy: { id: "desc" },
+      include: {
+        usuarios: {
+          select: { id: true, nombre: true },
+        },
+        _count: {
+          select: { testimonios: true },
+        },
       },
-      _count: {
-        select: { testimonios: true },
-      },
-    },
-    take: 100,
-  });
+      take: 100,
+    });
 
-  return NextResponse.json(victimas);
+    return NextResponse.json(victimas);
+  } catch (error) {
+    console.error('Error fetching victimas:', error);
+    return NextResponse.json([]);
+  }
 }
 
 export async function POST(request: Request) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import type { Lugar } from "@/types";
 import { createMapIcons } from "@/components/maps/map-icons";
@@ -27,6 +27,8 @@ export default function MapaPage() {
   const [lugares, setLugares] = useState<Lugar[]>([]);
   const [tipoFilter, setTipoFilter] = useState("");
   const [mapIcons, setMapIcons] = useState<any>(null);
+  const [mapFocused, setMapFocused] = useState(false);
+  const mapRef = useRef<any>(null);
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -39,6 +41,17 @@ export default function MapaPage() {
       setMapIcons(createMapIcons());
     }
   }, []);
+
+  useEffect(() => {
+    if (mapRef.current && typeof window !== "undefined") {
+      const map = mapRef.current;
+      if (mapFocused) {
+        map.scrollWheelZoom.enable();
+      } else {
+        map.scrollWheelZoom.disable();
+      }
+    }
+  }, [mapFocused]);
 
   const filteredLugares = tipoFilter
     ? lugares.filter((l) => l.tipo === tipoFilter)
@@ -76,12 +89,25 @@ export default function MapaPage() {
           </div>
         </section>
 
-        <section className="mt-8 surface-panel rounded-2xl p-2 h-[600px]">
+        <section 
+          className="mt-8 surface-panel rounded-2xl p-2 h-[600px] relative z-0"
+          onMouseEnter={() => setMapFocused(true)}
+          onMouseLeave={() => setMapFocused(false)}
+        >
+          {!mapFocused && (
+            <div className="absolute inset-0 z-[1] flex items-center justify-center pointer-events-none">
+              <div className="bg-black/50 text-white px-4 py-2 rounded-lg text-sm">
+                {t.language === "es" ? "Haz clic para interactuar con el mapa" : "Click to interact with the map"}
+              </div>
+            </div>
+          )}
           {typeof window !== "undefined" && mapIcons && (
             <MapContainer
               center={[5.54127, -74.99313]}
               zoom={10}
-              style={{ height: "100%", width: "100%", borderRadius: "12px" }}
+              scrollWheelZoom={false}
+              ref={mapRef}
+              style={{ height: "100%", width: "100%", borderRadius: "12px", position: "relative", zIndex: 0 }}
             >
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

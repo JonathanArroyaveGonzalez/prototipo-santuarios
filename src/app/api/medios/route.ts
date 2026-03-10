@@ -5,17 +5,22 @@ import { ensurePrototypeUser } from "@/lib/prototype-bootstrap";
 import { inferMediaTypeFromMime, normalizeMediaType } from "@/lib/media-utils";
 
 export async function GET() {
-  const medios = await prisma.medios.findMany({
-    orderBy: { id: "desc" },
-    include: {
-      usuarios: {
-        select: { id: true, nombre: true },
+  try {
+    const medios = await prisma.medios.findMany({
+      orderBy: { id: "desc" },
+      include: {
+        usuarios: {
+          select: { id: true, nombre: true },
+        },
       },
-    },
-    take: 100,
-  });
+      take: 100,
+    });
 
-  return NextResponse.json(medios);
+    return NextResponse.json(medios);
+  } catch (error) {
+    console.error('Error fetching medios:', error);
+    return NextResponse.json([]);
+  }
 }
 
 export async function POST(request: Request) {

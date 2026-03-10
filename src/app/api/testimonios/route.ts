@@ -12,23 +12,28 @@ type TestimonioPayload = {
 };
 
 export async function GET() {
-  const testimonios = await prisma.testimonios.findMany({
-    orderBy: { id: "desc" },
-    include: {
-      victimas: {
-        select: { id: true, nombres: true, apellidos: true },
+  try {
+    const testimonios = await prisma.testimonios.findMany({
+      orderBy: { id: "desc" },
+      include: {
+        victimas: {
+          select: { id: true, nombres: true, apellidos: true },
+        },
+        medios: {
+          select: { id: true, tipo: true, url: true },
+        },
+        lugares: {
+          select: { id: true, nombre: true, tipo: true },
+        },
       },
-      medios: {
-        select: { id: true, tipo: true, url: true },
-      },
-      lugares: {
-        select: { id: true, nombre: true, tipo: true },
-      },
-    },
-    take: 100,
-  });
+      take: 100,
+    });
 
-  return NextResponse.json(testimonios);
+    return NextResponse.json(testimonios);
+  } catch (error) {
+    console.error('Error fetching testimonios:', error);
+    return NextResponse.json([]);
+  }
 }
 
 export async function POST(request: Request) {

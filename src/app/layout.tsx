@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, Geist_Mono, Sora } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
 import { LanguageProvider } from "@/lib/language-context";
+import { LayoutContent } from "@/components/layout/LayoutContent";
 
 const sora = Sora({
   variable: "--font-sora",
@@ -36,9 +35,7 @@ export default function RootLayout({
         className={`${sora.variable} ${fraunces.variable} ${geistMono.variable} antialiased`}
       >
         <LanguageProvider>
-          <Header />
-          {children}
-          <Footer />
+          <LayoutContent>{children}</LayoutContent>
         </LanguageProvider>
       </body>
     </html>
