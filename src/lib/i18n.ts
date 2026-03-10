@@ -5,6 +5,8 @@ export const translations = {
       victims: "Víctimas",
       map: "Mapa",
       memoryMap: "Mapa de Memoria",
+      events: "Eventos",
+      virtualTour: "Recorrido virtual",
       testimonies: "Testimonios",
       about: "Sobre Proyecto",
       login: "Acceder",
@@ -15,6 +17,7 @@ export const translations = {
       subtitle: "Diálogos para la verdad y la reparación simbólica de las víctimas de desaparición en Samaná, Caldas.",
       exploreVictims: "Explorar Víctimas",
       viewMap: "Ver Mapa Interactivo",
+      virtualTourCta: "Entrar al Recorrido Virtual 3D",
       victimsRegistered: "Víctimas Registradas",
       testimonies: "Testimonios",
       memoryPlaces: "Lugares de Memoria",
@@ -35,7 +38,15 @@ export const translations = {
       contributeDesc: "Si tienes información sobre personas desaparecidas o deseas compartir un testimonio, tu voz es fundamental para la construcción de verdad y memoria.",
       documentsDesc: "Personas desaparecidas documentadas",
       familyDesc: "Relatos de familiares y comunidad",
-      sitesDesc: "Sitios georeferenciados en el territorio"
+      sitesDesc: "Sitios georeferenciados en el territorio",
+      gardenTitle: "Jardín de las Almas",
+      gardenSubtitle: "Un collage vivo de velas y rostros para recordar. Cada luz representa una historia que permanece.",
+      gardenHint: "Haz clic en una vela o retrato para conocer su historia.",
+      gardenModalMunicipality: "Municipio",
+      gardenModalDepartment: "Departamento",
+      gardenModalDisappearance: "Fecha de desaparición",
+      gardenModalStatus: "Estado de búsqueda",
+      close: "Cerrar"
     },
     victims: {
       title: "Víctimas de Desaparición",
@@ -58,6 +69,19 @@ export const translations = {
       tributeSite: "Sitio de homenaje",
       showing: "Mostrando",
       places: "lugares"
+    },
+    events: {
+      title: "Eventos de Memoria",
+      subtitle: "Agenda de actividades y acciones simbólicas registradas en el proyecto.",
+      filterByCategory: "Filtrar por categoría:",
+      allCategories: "Todas las categorías",
+      showing: "Mostrando",
+      of: "de",
+      items: "eventos",
+      starts: "Inicia",
+      ends: "Finaliza",
+      noDescription: "Sin descripción disponible.",
+      empty: "No se encontraron eventos con los filtros seleccionados"
     },
     footer: {
       title: "Santuarios de la Memoria",
@@ -195,6 +219,8 @@ export const translations = {
       victims: "Victims",
       map: "Map",
       memoryMap: "Memory Map",
+      events: "Events",
+      virtualTour: "Virtual tour",
       testimonies: "Testimonies",
       about: "About Project",
       login: "Login",
@@ -205,6 +231,7 @@ export const translations = {
       subtitle: "Dialogues for truth and symbolic reparation of disappearance victims in Samaná, Caldas.",
       exploreVictims: "Explore Victims",
       viewMap: "View Interactive Map",
+      virtualTourCta: "Enter the 3D Virtual Tour",
       victimsRegistered: "Registered Victims",
       testimonies: "Testimonies",
       memoryPlaces: "Memory Places",
@@ -225,7 +252,15 @@ export const translations = {
       contributeDesc: "If you have information about disappeared persons or wish to share a testimony, your voice is fundamental for the construction of truth and memory.",
       documentsDesc: "Documented disappeared persons",
       familyDesc: "Stories from family members and community",
-      sitesDesc: "Georeferenced sites in the territory"
+      sitesDesc: "Georeferenced sites in the territory",
+      gardenTitle: "Garden of Souls",
+      gardenSubtitle: "A living collage of candles and faces to remember. Each light represents a story that remains.",
+      gardenHint: "Click any candle or portrait to view details.",
+      gardenModalMunicipality: "Municipality",
+      gardenModalDepartment: "Department",
+      gardenModalDisappearance: "Disappearance date",
+      gardenModalStatus: "Search status",
+      close: "Close"
     },
     victims: {
       title: "Disappearance Victims",
@@ -248,6 +283,19 @@ export const translations = {
       tributeSite: "Tribute site",
       showing: "Showing",
       places: "places"
+    },
+    events: {
+      title: "Memory Events",
+      subtitle: "Schedule of activities and symbolic actions registered by the project.",
+      filterByCategory: "Filter by category:",
+      allCategories: "All categories",
+      showing: "Showing",
+      of: "of",
+      items: "events",
+      starts: "Starts",
+      ends: "Ends",
+      noDescription: "No description available.",
+      empty: "No events found with the selected filters"
     },
     footer: {
       title: "Memory Sanctuaries",

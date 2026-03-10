@@ -29,6 +29,8 @@ export function Header() {
     { href: "/", label: t.nav.home },
     { href: "/victimas", label: t.nav.victims },
     { href: "/mapa", label: t.nav.memoryMap },
+    { href: "/eventos", label: t.nav.events },
+    { href: "/recorrido-virtual", label: t.nav.virtualTour },
     { href: "/testimonios", label: t.nav.testimonies },
     { href: "/about", label: t.nav.about },
   ];
@@ -41,14 +43,26 @@ export function Header() {
       scrolled ? "bg-[#2E4739]/95 backdrop-blur-md shadow-lg" : "bg-[#2E4739] shadow-md"
     )} style={{ borderBottom: `1px solid rgba(178, 145, 111, ${scrolled ? '0.2' : '0.15'})` }}>
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-20 items-center justify-between">
-          <div className="hidden lg:flex lg:gap-x-6 lg:items-center lg:flex-1">
-            {navItems.slice(0, 3).map((item) => (
+        <div className="flex h-20 items-center justify-between gap-4">
+          <Link href="/" className="flex min-w-0 items-center gap-3 lg:flex-shrink-0">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#B2916F] to-[#9a7d5f] flex items-center justify-center shadow-lg ring-2 ring-white/20">
+              <Heart className="h-6 w-6 text-white" fill="currentColor" />
+            </div>
+            <div className="hidden xl:block">
+              <div className="font-display text-xl tracking-wide text-white whitespace-nowrap">
+                Santuarios de la Memoria
+              </div>
+              <div className="text-xs text-white/70">Samaná, Caldas</div>
+            </div>
+          </Link>
+
+          <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-center lg:gap-x-2 xl:gap-x-4">
+            {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "text-sm font-medium transition-all duration-300",
+                  "whitespace-nowrap rounded-full px-2.5 py-1 text-sm font-medium transition-all duration-300",
                   isActive(item.href)
                     ? "text-white border-b-2 border-[#B2916F] pb-1"
                     : "text-white/90 hover:text-[#B2916F]"
@@ -59,33 +73,7 @@ export function Header() {
             ))}
           </div>
 
-          <Link href="/" className="flex items-center gap-3 lg:flex-shrink-0">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#B2916F] to-[#9a7d5f] flex items-center justify-center shadow-lg ring-2 ring-white/20">
-              <Heart className="w-6 h-6 text-white" fill="currentColor" />
-            </div>
-            <div className="hidden xl:block">
-              <div className="font-display text-xl tracking-wide text-white">
-                Santuarios de la Memoria
-              </div>
-              <div className="text-xs text-white/70">Samaná, Caldas</div>
-            </div>
-          </Link>
-
-          <div className="hidden lg:flex lg:gap-x-6 lg:items-center lg:flex-1 lg:justify-end">
-            {navItems.slice(3).map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "text-sm font-medium transition-all duration-300",
-                  isActive(item.href)
-                    ? "text-white border-b-2 border-[#B2916F] pb-1"
-                    : "text-white/90 hover:text-[#B2916F]"
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
+          <div className="hidden lg:flex lg:items-center lg:gap-3 lg:flex-shrink-0">
             <button
               onClick={() => setLanguage(language === "es" ? "en" : "es")}
               className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-white/20"
