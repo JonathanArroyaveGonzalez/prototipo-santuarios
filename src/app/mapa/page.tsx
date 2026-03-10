@@ -29,7 +29,7 @@ export default function MapaPage() {
   const [mapIcons, setMapIcons] = useState<any>(null);
   const [mapFocused, setMapFocused] = useState(false);
   const mapRef = useRef<any>(null);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     fetch("/api/lugares")
@@ -97,7 +97,7 @@ export default function MapaPage() {
           {!mapFocused && (
             <div className="absolute inset-0 z-[1] flex items-center justify-center pointer-events-none">
               <div className="bg-black/50 text-white px-4 py-2 rounded-lg text-sm">
-                {t.language === "es" ? "Haz clic para interactuar con el mapa" : "Click to interact with the map"}
+                {language === "es" ? "Haz clic para interactuar con el mapa" : "Click to interact with the map"}
               </div>
             </div>
           )}

@@ -46,6 +46,7 @@ export const translations = {
       of: "de",
       disappearance: "Desaparición",
       age: "Edad",
+      years: "años",
       noVictims: "No se encontraron víctimas con los filtros seleccionados"
     },
     map: {
@@ -235,6 +236,7 @@ export const translations = {
       of: "of",
       disappearance: "Disappearance",
       age: "Age",
+      years: "years",
       noVictims: "No victims found with the selected filters"
     },
     map: {
