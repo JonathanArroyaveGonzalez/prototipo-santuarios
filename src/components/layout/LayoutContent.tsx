@@ -7,8 +7,7 @@ import { Footer } from "@/components/layout/footer";
 export function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isDashboard = pathname?.startsWith("/dashboard");
-  const isVirtualTour = pathname?.startsWith("/recorrido-virtual");
-  const hideChrome = isDashboard || isVirtualTour;
+  const hideChrome = isDashboard;
 
   return (
     <>

@@ -1,1084 +1,2276 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Santuarios de la Memoria — Recorrido Digital 3D</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Sora:wght@300;400;500;600&display=swap');
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --brand: #124a63;
-    --brand-strong: #0a3147;
-    --accent: #9f3f2f;
-    --bg: #f3eee5;
-    --surface: #fffaf3;
-    --gold: #c9a96e;
-    --candle: #ffb347;
-    --flower: #e87c6b;
-  }
-
-  body {
-    background: #0a0a0f;
-    font-family: 'Sora', sans-serif;
-    overflow: hidden;
-    color: white;
-    cursor: none;
-  }
-
-  #cursor {
-    position: fixed;
-    width: 18px; height: 18px;
-    border: 2px solid var(--gold);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 9999;
-    transform: translate(-50%, -50%);
-    transition: transform 0.1s, background 0.2s;
-    mix-blend-mode: difference;
-  }
-  #cursor.hovering { transform: translate(-50%, -50%) scale(2.5); background: rgba(201,169,110,0.2); }
-
-  canvas { display: block; }
-
-  /* PANTALLA DE BIENVENIDA */
-  #intro {
-    position: fixed; inset: 0;
-    background: linear-gradient(135deg, #060c14 0%, #0a1e2c 50%, #0d0a08 100%);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    z-index: 100;
-    transition: opacity 1.5s ease;
-  }
-  #intro.fade-out { opacity: 0; pointer-events: none; }
-
-  .intro-particles {
-    position: absolute; inset: 0;
-    overflow: hidden;
-  }
-  .particle {
-    position: absolute;
-    width: 2px; height: 2px;
-    background: var(--gold);
-    border-radius: 50%;
-    animation: drift linear infinite;
-    opacity: 0;
-  }
-  @keyframes drift {
-    0% { transform: translateY(100vh) translateX(0); opacity: 0; }
-    10% { opacity: 0.6; }
-    90% { opacity: 0.3; }
-    100% { transform: translateY(-10vh) translateX(var(--drift)); opacity: 0; }
-  }
-
-  .intro-content {
-    position: relative;
-    text-align: center;
-    max-width: 640px;
-    padding: 2rem;
-  }
-
-  .intro-eyebrow {
-    font-family: 'Sora', sans-serif;
-    font-size: 0.7rem;
-    letter-spacing: 0.35em;
-    color: var(--gold);
-    text-transform: uppercase;
-    margin-bottom: 1.5rem;
-    opacity: 0;
-    animation: fadeUp 1s 0.5s forwards;
-  }
-
-  .intro-title {
-    font-family: 'Fraunces', serif;
-    font-size: clamp(2.2rem, 6vw, 4rem);
-    font-weight: 300;
-    line-height: 1.15;
-    color: var(--bg);
-    margin-bottom: 0.5rem;
-    opacity: 0;
-    animation: fadeUp 1s 0.8s forwards;
-  }
-  .intro-title em {
-    font-style: italic;
-    color: var(--gold);
-  }
-
-  .intro-sub {
-    font-size: 0.9rem;
-    color: rgba(243,238,229,0.55);
-    line-height: 1.7;
-    margin-bottom: 2.5rem;
-    opacity: 0;
-    animation: fadeUp 1s 1.1s forwards;
-  }
-
-  .intro-divider {
-    width: 60px; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    margin: 1.5rem auto;
-    opacity: 0;
-    animation: fadeUp 1s 1s forwards;
-  }
-
-  .btn-enter {
-    display: inline-flex;
-    align-items: center; gap: 0.75rem;
-    padding: 0.9rem 2.2rem;
-    border: 1px solid var(--gold);
-    background: transparent;
-    color: var(--gold);
-    font-family: 'Sora', sans-serif;
-    font-size: 0.8rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    cursor: none;
-    transition: all 0.4s;
-    opacity: 0;
-    animation: fadeUp 1s 1.4s forwards;
-    position: relative;
-    overflow: hidden;
-  }
-  .btn-enter::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: var(--gold);
-    transform: translateX(-100%);
-    transition: transform 0.4s;
-    z-index: -1;
-  }
-  .btn-enter:hover::before { transform: translateX(0); }
-  .btn-enter:hover { color: #0a1e2c; }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* CONTROLES EN ESCENA */
-  #hud {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 50;
-    opacity: 0;
-    transition: opacity 1s 0.5s;
-  }
-  #hud.visible { opacity: 1; }
-
-  .hud-header {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    padding: 1.5rem 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%);
-  }
-
-  .hud-logo {
-    font-family: 'Fraunces', serif;
-    font-size: 1rem;
-    font-weight: 300;
-    color: var(--bg);
-    letter-spacing: 0.05em;
-  }
-  .hud-logo span { color: var(--gold); }
-
-  .hud-nav {
-    display: flex; gap: 0.5rem;
-    pointer-events: all;
-  }
-
-  .hud-btn {
-    padding: 0.45rem 1rem;
-    border: 1px solid rgba(201,169,110,0.4);
-    background: rgba(10,17,28,0.6);
-    color: rgba(243,238,229,0.8);
-    font-family: 'Sora', sans-serif;
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    cursor: none;
-    transition: all 0.3s;
-    backdrop-filter: blur(8px);
-  }
-  .hud-btn:hover, .hud-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(201,169,110,0.1); }
-
-  /* PANEL LATERAL - VÍCTIMA SELECCIONADA */
-  #victim-panel {
-    position: absolute;
-    right: 0; top: 0; bottom: 0;
-    width: 340px;
-    background: linear-gradient(135deg, rgba(10,17,28,0.92) 0%, rgba(18,74,99,0.85) 100%);
-    backdrop-filter: blur(20px);
-    border-left: 1px solid rgba(201,169,110,0.2);
-    padding: 6rem 2rem 2rem;
-    transform: translateX(100%);
-    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    pointer-events: all;
-    overflow-y: auto;
-  }
-  #victim-panel.open { transform: translateX(0); }
-
-  .panel-close {
-    position: absolute;
-    top: 5rem; right: 1.5rem;
-    background: none; border: none;
-    color: rgba(243,238,229,0.5);
-    font-size: 1.4rem;
-    cursor: none;
-    transition: color 0.2s;
-    line-height: 1;
-  }
-  .panel-close:hover { color: var(--gold); }
-
-  .victim-photo {
-    width: 90px; height: 90px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid var(--gold);
-    margin-bottom: 1rem;
-    filter: sepia(20%);
-  }
-
-  .victim-photo-placeholder {
-    width: 90px; height: 90px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--brand), var(--brand-strong));
-    border: 2px solid var(--gold);
-    margin-bottom: 1rem;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Fraunces', serif;
-    font-size: 2rem;
-    color: var(--gold);
-  }
-
-  .victim-name {
-    font-family: 'Fraunces', serif;
-    font-size: 1.35rem;
-    font-weight: 300;
-    color: var(--bg);
-    margin-bottom: 0.2rem;
-  }
-
-  .victim-dates {
-    font-size: 0.72rem;
-    color: var(--gold);
-    letter-spacing: 0.1em;
-    margin-bottom: 1rem;
-  }
-
-  .victim-bio {
-    font-size: 0.8rem;
-    line-height: 1.75;
-    color: rgba(243,238,229,0.65);
-    margin-bottom: 1.5rem;
-  }
-
-  .offerings-title {
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 1rem;
-    display: flex; align-items: center; gap: 0.5rem;
-  }
-  .offerings-title::after { content: ''; flex: 1; height: 1px; background: rgba(201,169,110,0.3); }
-
-  .offering-btns {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 0.6rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .offering-btn {
-    padding: 0.75rem;
-    border: 1px solid rgba(201,169,110,0.3);
-    background: rgba(255,255,255,0.03);
-    color: rgba(243,238,229,0.7);
-    font-family: 'Sora', sans-serif;
-    font-size: 0.7rem;
-    cursor: none;
-    transition: all 0.3s;
-    text-align: center;
-    display: flex; flex-direction: column;
-    align-items: center; gap: 0.35rem;
-  }
-  .offering-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(201,169,110,0.08); }
-  .offering-btn.placed { border-color: var(--accent); color: var(--accent); }
-
-  .offering-icon { font-size: 1.5rem; }
-
-  .offerings-count {
-    font-size: 0.7rem;
-    color: rgba(243,238,229,0.4);
-    text-align: center;
-    margin-bottom: 1.5rem;
-  }
-
-  .message-area {
-    margin-bottom: 1.5rem;
-  }
-  .message-area label {
-    display: block;
-    font-size: 0.65rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 0.5rem;
-  }
-  .message-area textarea {
-    width: 100%;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(201,169,110,0.2);
-    color: rgba(243,238,229,0.8);
-    font-family: 'Sora', sans-serif;
-    font-size: 0.75rem;
-    padding: 0.75rem;
-    resize: none;
-    height: 80px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .message-area textarea:focus { border-color: rgba(201,169,110,0.5); }
-  .message-area textarea::placeholder { color: rgba(243,238,229,0.25); }
-
-  .btn-tribute {
-    width: 100%;
-    padding: 0.9rem;
-    background: linear-gradient(135deg, var(--accent), #7a2f22);
-    border: none;
-    color: white;
-    font-family: 'Sora', sans-serif;
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    cursor: none;
-    transition: opacity 0.3s;
-  }
-  .btn-tribute:hover { opacity: 0.85; }
-
-  /* CONTROLES DE NAVEGACIÓN */
-  #nav-controls {
-    position: absolute;
-    bottom: 2.5rem; left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    pointer-events: all;
-  }
-
-  .nav-hint {
-    font-size: 0.65rem;
-    letter-spacing: 0.12em;
-    color: rgba(243,238,229,0.4);
-    text-transform: uppercase;
-    display: flex; align-items: center; gap: 0.5rem;
-  }
-
-  .key-badge {
-    display: inline-block;
-    padding: 0.2rem 0.5rem;
-    border: 1px solid rgba(201,169,110,0.3);
-    font-size: 0.6rem;
-    color: rgba(201,169,110,0.6);
-    font-family: 'Sora', sans-serif;
-  }
-
-  /* TOAST de ofrenda */
-  #toast {
-    position: fixed;
-    bottom: 6rem; left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: rgba(10,17,28,0.95);
-    border: 1px solid var(--gold);
-    color: var(--bg);
-    font-family: 'Sora', sans-serif;
-    font-size: 0.8rem;
-    padding: 0.75rem 1.5rem;
-    opacity: 0;
-    transition: all 0.4s;
-    pointer-events: none;
-    z-index: 200;
-    white-space: nowrap;
-  }
-  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  /* CONTADOR DE VÍCTIMAS */
-  .counter-bar {
-    position: absolute;
-    bottom: 2.5rem; right: 2rem;
-    text-align: right;
-  }
-  .counter-num {
-    font-family: 'Fraunces', serif;
-    font-size: 2.5rem;
-    font-weight: 300;
-    color: rgba(201,169,110,0.4);
-    line-height: 1;
-  }
-  .counter-label {
-    font-size: 0.6rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: rgba(243,238,229,0.25);
-  }
-
-  /* MINIMAP / POSICIÓN */
-  .position-indicator {
-    position: absolute;
-    bottom: 2.5rem; left: 2rem;
-    display: flex; flex-direction: column; gap: 0.25rem;
-  }
-  .pos-label { font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(243,238,229,0.25); }
-  .pos-value { font-family: 'Fraunces', serif; font-size: 0.9rem; color: rgba(201,169,110,0.5); }
-
-  /* Crosshair de movimiento */
-  #crosshair {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 20px; height: 20px;
-    pointer-events: none;
-    z-index: 60;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  #crosshair.active { opacity: 1; }
-  #crosshair::before, #crosshair::after {
-    content: '';
-    position: absolute;
-    background: rgba(201,169,110,0.6);
-  }
-  #crosshair::before { width: 1px; height: 100%; top: 0; left: 50%; }
-  #crosshair::after { height: 1px; width: 100%; top: 50%; left: 0; }
-
-  /* Instrucción de clic */
-  .click-hint {
-    position: absolute;
-    bottom: 0; left: 50%; transform: translateX(-50%);
-    font-size: 0.65rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: rgba(201,169,110,0.5);
-    white-space: nowrap;
-    pointer-events: none;
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:0.9} }
-</style>
-</head>
-<body>
-
-<div id="cursor"></div>
-<div id="crosshair"></div>
-<div id="toast">🕯️ Ofrenda depositada con amor</div>
-
-<!-- INTRO -->
-<div id="intro">
-  <div class="intro-particles" id="particles"></div>
-  <div class="intro-content">
-    <p class="intro-eyebrow">Universidad de Caldas · PRY-335 · Samaná</p>
-    <h1 class="intro-title">Santuarios de<br><em>la Memoria</em></h1>
-    <div class="intro-divider"></div>
-    <p class="intro-sub">Un espacio digital para honrar a quienes ya no están.<br>Camina entre los santuarios, encuentra a tu familiar<br>y deja una ofrenda de luz.</p>
-    <button class="btn-enter" id="btn-enter">
-      <span>Entrar al recorrido</span>
-      <span>→</span>
-    </button>
-  </div>
-</div>
-
-<!-- HUD EN ESCENA -->
-<div id="hud">
-  <div class="hud-header">
-    <div class="hud-logo">Santuarios <span>de la Memoria</span></div>
-    <div class="hud-nav">
-      <button class="hud-btn active" id="btn-free">Recorrido libre</button>
-      <button class="hud-btn" id="btn-search">Buscar víctima</button>
-      <button class="hud-btn" id="btn-tour">Visita guiada</button>
-    </div>
-  </div>
-
-  <!-- Panel lateral víctima -->
-  <div id="victim-panel">
-    <button class="panel-close" id="panel-close">✕</button>
-    <div class="victim-photo-placeholder" id="victim-initial">G</div>
-    <div class="victim-name" id="victim-name">Gabriel Ospina Ríos</div>
-    <div class="victim-dates" id="victim-dates">1958 — 1998 · Samaná, Caldas</div>
-    <p class="victim-bio" id="victim-bio">Agricultor y padre de familia. Desapareció el 14 de marzo de 1998 en la vereda El Jardín. Su familia lo recuerda como un hombre generoso que amaba la tierra y cantaba vallenatos en las madrugadas.</p>
-
-    <div class="offerings-title">Ofrendas depositadas</div>
-    <div class="offering-btns">
-      <button class="offering-btn" data-type="candle" onclick="placeOffering('candle')">
-        <span class="offering-icon">🕯️</span>
-        <span>Encender vela</span>
-      </button>
-      <button class="offering-btn" data-type="flower" onclick="placeOffering('flower')">
-        <span class="offering-icon">🌹</span>
-        <span>Dejar flor</span>
-      </button>
-      <button class="offering-btn" data-type="candle2" onclick="placeOffering('candle2')">
-        <span class="offering-icon">🌼</span>
-        <span>Flor silvestre</span>
-      </button>
-      <button class="offering-btn" data-type="cross" onclick="placeOffering('cross')">
-        <span class="offering-icon">📿</span>
-        <span>Rosario</span>
-      </button>
-    </div>
-
-    <div class="offerings-count" id="offerings-count">23 ofrendas · 7 mensajes</div>
-
-    <div class="message-area">
-      <label>Deja un mensaje</label>
-      <textarea placeholder="Escribe unas palabras para recordarlo..."></textarea>
-    </div>
-
-    <button class="btn-tribute" onclick="sendTribute()">Enviar homenaje</button>
-  </div>
-
-  <!-- Controles inferiores -->
-  <div id="nav-controls">
-    <div class="nav-hint">
-      <span class="key-badge">Click</span> acercar ·
-      <span class="key-badge">Drag</span> rotar ·
-      <span class="key-badge">Scroll</span> zoom
-    </div>
-  </div>
-
-  <div class="counter-bar">
-    <div class="counter-num">147</div>
-    <div class="counter-label">memoriales activos</div>
-  </div>
-
-  <div class="position-indicator">
-    <div class="pos-label">Zona actual</div>
-    <div class="pos-value" id="zone-name">Galería Principal</div>
-    <p class="click-hint">Haz clic en un memorial para visitarlo</p>
-  </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>
-// ─── PARTÍCULAS INTRO ───────────────────────────────────────────────────────
-const particlesContainer = document.getElementById('particles');
-for (let i = 0; i < 60; i++) {
-  const p = document.createElement('div');
-  p.className = 'particle';
-  p.style.cssText = `
-    left: ${Math.random()*100}%;
-    animation-duration: ${4+Math.random()*8}s;
-    animation-delay: ${Math.random()*5}s;
-    --drift: ${(Math.random()-0.5)*200}px;
-    width: ${1+Math.random()*2}px;
-    height: ${1+Math.random()*2}px;
-    opacity: ${0.3+Math.random()*0.5};
-  `;
-  particlesContainer.appendChild(p);
-}
-
-// ─── CURSOR ──────────────────────────────────────────────────────────────────
-const cursor = document.getElementById('cursor');
-document.addEventListener('mousemove', e => {
-  cursor.style.left = e.clientX + 'px';
-  cursor.style.top = e.clientY + 'px';
-});
-document.querySelectorAll('button, textarea').forEach(el => {
-  el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
-  el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
-});
-
-// ─── DATOS DE VÍCTIMAS ───────────────────────────────────────────────────────
-const victims = [
-  { name: 'Gabriel Ospina Ríos', dates: '1958 — 1998', initial: 'G', bio: 'Agricultor y padre de familia. Desapareció el 14 de marzo de 1998 en la vereda El Jardín. Su familia lo recuerda como un hombre generoso que amaba la tierra.', ofrendas: 23, mensajes: 7, zone: 'Galería Principal' },
-  { name: 'Esperanza Duque Llano', dates: '1965 — 2001', initial: 'E', bio: 'Maestra rural de la escuela El Porvenir. Dedicó su vida a enseñar a niños en zonas remotas de Samaná. Madre de tres hijos.', ofrendas: 41, mensajes: 15, zone: 'Jardín del Recuerdo' },
-  { name: 'Luis Ángel Cardona', dates: '1972 — 1999', initial: 'L', bio: 'Joven líder comunitario de la vereda La Rica. Promovía la paz entre vecinos y soñaba con ser veterinario.', ofrendas: 18, mensajes: 9, zone: 'Capilla de la Paz' },
-  { name: 'María Inés Zuluaga', dates: '1950 — 2002', initial: 'M', bio: 'Parteira y curandera conocida en toda la región. Trajo al mundo a cientos de niños. Sus remedios de plantas son aún recordados.', ofrendas: 57, mensajes: 22, zone: 'Galería Principal' },
-  { name: 'Carlos Emilio Hurtado', dates: '1968 — 2000', initial: 'C', bio: 'Campesino cafetero. Padre de cuatro hijos. Desapareció cuando regresaba del mercado de La Dorada.', ofrendas: 12, mensajes: 4, zone: 'Sendero de la Memoria' },
-  { name: 'Rosa Elena Betancur', dates: '1979 — 2003', initial: 'R', bio: 'Joven de 24 años que trabajaba como enfermera en el centro de salud de Samaná. Amante de la música y el teatro.', ofrendas: 35, mensajes: 11, zone: 'Jardín del Recuerdo' },
-  { name: 'Héctor Fabio Monsalve', dates: '1955 — 1997', initial: 'H', bio: 'Comerciante y músico. Tocaba tiple en las festividades del pueblo. Padre y esposo ejemplar según sus vecinos.', ofrendas: 29, mensajes: 8, zone: 'Capilla de la Paz' },
-];
-
-// ─── ESCENA THREE.JS ─────────────────────────────────────────────────────────
-let scene, camera, renderer, clock;
-let memorials = [];
-let particles3D = [];
-let flames = [];
-let currentVictim = null;
-let animFrame;
-let mouse = new THREE.Vector2();
-let raycaster = new THREE.Raycaster();
-let isAutoTour = false;
-let autoAngle = 0;
-let tourTarget = 0;
-
-function initThree() {
-  scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x040810, 0.025);
-
-  camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 200);
-  camera.position.set(0, 3, 18);
-  camera.lookAt(0, 1, 0);
-
-  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-  renderer.setSize(innerWidth, innerHeight);
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.outputEncoding = THREE.sRGBEncoding;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.8;
-  document.body.prepend(renderer.domElement);
-
-  clock = new THREE.Clock();
-
-  buildScene();
-  buildParticles();
-  setupLights();
-  setupControls();
-  animate();
-}
-
-function buildScene() {
-  // SUELO — piedra oscura con patrón
-  const floorGeo = new THREE.PlaneGeometry(120, 120, 40, 40);
-  const floorMat = new THREE.MeshStandardMaterial({
-    color: 0x0d1520,
-    roughness: 0.9,
-    metalness: 0.05,
-  });
-  const floor = new THREE.Mesh(floorGeo, floorMat);
-  floor.rotation.x = -Math.PI/2;
-  floor.receiveShadow = true;
-  scene.add(floor);
-
-  // LÍNEAS DE CAMINO — piedras luminosas en el piso
-  const pathGeo = new THREE.PlaneGeometry(3, 30);
-  const pathMat = new THREE.MeshStandardMaterial({ color: 0x1a2a3a, roughness: 0.7 });
-  const path = new THREE.Mesh(pathGeo, pathMat);
-  path.rotation.x = -Math.PI/2;
-  path.position.y = 0.01;
-  scene.add(path);
-
-  // CIELO NOCTURNO — esfera con gradiente
-  const skyGeo = new THREE.SphereGeometry(90, 32, 16);
-  const skyMat = new THREE.MeshBasicMaterial({
-    color: 0x020508,
-    side: THREE.BackSide,
-  });
-  scene.add(new THREE.Mesh(skyGeo, skyMat));
-
-  // ESTRELLAS
-  const starGeo = new THREE.BufferGeometry();
-  const starPos = [];
-  for (let i = 0; i < 2000; i++) {
-    const theta = Math.random() * Math.PI * 2;
-    const phi = Math.acos(Math.random() * 2 - 1);
-    const r = 80 + Math.random() * 8;
-    starPos.push(r*Math.sin(phi)*Math.cos(theta), r*Math.cos(phi), r*Math.sin(phi)*Math.sin(theta));
-  }
-  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-  const starMat = new THREE.PointsMaterial({ color: 0xfff8e7, size: 0.18, sizeAttenuation: true });
-  scene.add(new THREE.Points(starGeo, starMat));
-
-  // ARCOS ARQUITECTÓNICOS — columnas a los lados
-  buildArches();
-
-  // MEMORIALES
-  const positions = [
-    [-5, 0, -2], [0, 0, -4], [5, 0, -2],
-    [-6, 0, -8], [0, 0, -10], [6, 0, -8],
-    [0, 0, -16],
-  ];
-
-  victims.forEach((v, i) => {
-    const pos = positions[i] || [Math.cos(i*1.2)*7, 0, Math.sin(i*1.2)*7 - 6];
-    const memorial = buildMemorial(v, pos);
-    memorials.push(memorial);
-  });
-
-  // NIEBLA EN EL PISO
-  for (let i = 0; i < 12; i++) {
-    const fogPlane = new THREE.Mesh(
-      new THREE.PlaneGeometry(8, 8),
-      new THREE.MeshBasicMaterial({
-        color: 0x0a1828,
-        transparent: true,
-        opacity: 0.18,
-        depthWrite: false,
-      })
-    );
-    fogPlane.rotation.x = -Math.PI/2;
-    fogPlane.position.set((Math.random()-0.5)*30, 0.05, Math.random()*-25 - 2);
-    scene.add(fogPlane);
-  }
-}
-
-function buildArches() {
-  const colMat = new THREE.MeshStandardMaterial({ color: 0x0e1e2c, roughness: 0.8, metalness: 0.1 });
-  for (let z = 0; z >= -20; z -= 5) {
-    for (const x of [-8, 8]) {
-      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 6, 8), colMat);
-      col.position.set(x, 3, z);
-      col.castShadow = true;
-      scene.add(col);
-
-      // Luz en la parte superior de cada columna
-      const colLight = new THREE.PointLight(0x1a4a6a, 0.3, 4);
-      colLight.position.set(x, 5.5, z);
-      scene.add(colLight);
-    }
-  }
-}
-
-function buildMemorial(victim, pos) {
-  const group = new THREE.Group();
-  group.position.set(...pos);
-  group.userData = { victim, id: victims.indexOf(victim) };
-
-  // BASE / PEDESTAL
-  const baseGeo = new THREE.BoxGeometry(1.2, 0.15, 1.2);
-  const stoneMat = new THREE.MeshStandardMaterial({ color: 0x16273a, roughness: 0.85, metalness: 0.15 });
-  const base = new THREE.Mesh(baseGeo, stoneMat);
-  base.position.y = 0.075;
-  base.receiveShadow = true;
-  base.castShadow = true;
-  group.add(base);
-
-  // COLUMNA
-  const colGeo = new THREE.BoxGeometry(0.7, 1.8, 0.12);
-  const col = new THREE.Mesh(colGeo, stoneMat);
-  col.position.y = 1.05;
-  col.castShadow = true;
-  col.receiveShadow = true;
-  group.add(col);
-
-  // FOTO/PLACA — plano oscuro con borde dorado
-  const plateGeo = new THREE.BoxGeometry(0.58, 0.7, 0.03);
-  const plateMat = new THREE.MeshStandardMaterial({ color: 0x0a1520, roughness: 0.5, metalness: 0.3 });
-  const plate = new THREE.Mesh(plateGeo, plateMat);
-  plate.position.set(0, 1.05, 0.075);
-  group.add(plate);
-
-  // BORDE DORADO para la placa
-  const borderGeo = new THREE.BoxGeometry(0.62, 0.74, 0.02);
-  const borderMat = new THREE.MeshStandardMaterial({ color: 0xb8860b, roughness: 0.3, metalness: 0.8 });
-  const border = new THREE.Mesh(borderGeo, borderMat);
-  border.position.set(0, 1.05, 0.065);
-  group.add(border);
-
-  // INICIAL EN LA PLACA (esfera con inicial simulada)
-  const sphereGeo = new THREE.SphereGeometry(0.12, 12, 12);
-  const sphereMat = new THREE.MeshStandardMaterial({ color: 0x124a63, roughness: 0.4, metalness: 0.2, emissive: 0x0a2030, emissiveIntensity: 0.3 });
-  const sphere = new THREE.Mesh(sphereGeo, sphereMat);
-  sphere.position.set(0, 1.12, 0.1);
-  group.add(sphere);
-
-  // VELA EN LA BASE
-  buildCandle(group, [0.25, 0.15, 0.3]);
-  buildCandle(group, [-0.25, 0.15, 0.3]);
-
-  // LUZ ANARANJADA DE VELA
-  const candleLight = new THREE.PointLight(0xffaa44, 0.8, 2.5);
-  candleLight.position.set(0, 0.6, 0.4);
-  group.add(candleLight);
-  flames.push({ light: candleLight, base: 0.8, offset: Math.random()*Math.PI*2 });
-
-  // HITBOX invisible para raycasting
-  const hitGeo = new THREE.BoxGeometry(1.4, 2.2, 1.4);
-  const hitMat = new THREE.MeshBasicMaterial({ visible: false });
-  const hitbox = new THREE.Mesh(hitGeo, hitMat);
-  hitbox.position.y = 1;
-  hitbox.userData = { isHitbox: true, victimId: victims.indexOf(victim) };
-  group.add(hitbox);
-
-  scene.add(group);
-  return group;
-}
-
-function buildCandle(group, pos) {
-  const [x, y, z] = pos;
-  const candleBody = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.04, 0.04, 0.25, 8),
-    new THREE.MeshStandardMaterial({ color: 0xfff8dc, roughness: 0.9 })
-  );
-  candleBody.position.set(x, y + 0.125, z);
-  group.add(candleBody);
-
-  const flameMesh = new THREE.Mesh(
-    new THREE.ConeGeometry(0.03, 0.08, 6),
-    new THREE.MeshBasicMaterial({ color: 0xffcc44 })
-  );
-  flameMesh.position.set(x, y + 0.29, z);
-  group.add(flameMesh);
-}
-
-function buildParticles() {
-  const geo = new THREE.BufferGeometry();
-  const count = 800;
-  const pos = new Float32Array(count * 3);
-  for (let i = 0; i < count; i++) {
-    pos[i*3] = (Math.random()-0.5)*40;
-    pos[i*3+1] = Math.random()*8;
-    pos[i*3+2] = Math.random()*-30;
-  }
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  const mat = new THREE.PointsMaterial({
-    color: 0xffdd88,
-    size: 0.06,
-    transparent: true,
-    opacity: 0.5,
-    sizeAttenuation: true,
-  });
-  const pts = new THREE.Points(geo, mat);
-  scene.add(pts);
-  particles3D.push(pts);
-}
-
-function setupLights() {
-  const ambient = new THREE.AmbientLight(0x0a1520, 1.2);
-  scene.add(ambient);
-
-  const moonLight = new THREE.DirectionalLight(0x1a2d40, 0.4);
-  moonLight.position.set(-20, 30, -10);
-  moonLight.castShadow = true;
-  scene.add(moonLight);
-
-  // Luz azulada al fondo (profundidad)
-  const backLight = new THREE.PointLight(0x0a3050, 1.5, 30);
-  backLight.position.set(0, 5, -20);
-  scene.add(backLight);
-}
-
-// ─── CONTROLES ───────────────────────────────────────────────────────────────
-let isDragging = false;
-let prevMouse = { x: 0, y: 0 };
-let camTheta = 0, camPhi = 0.15;
-let camRadius = 18;
-let targetTheta = 0, targetPhi = 0.15, targetRadius = 18;
-let camTarget = new THREE.Vector3(0, 1, -4);
-
-function setupControls() {
-  renderer.domElement.addEventListener('mousedown', e => {
-    isDragging = true;
-    prevMouse = { x: e.clientX, y: e.clientY };
-  });
-
-  document.addEventListener('mousemove', e => {
-    mouse.x = (e.clientX/innerWidth)*2-1;
-    mouse.y = -(e.clientY/innerHeight)*2+1;
-
-    if (isDragging) {
-      const dx = (e.clientX - prevMouse.x) * 0.005;
-      const dy = (e.clientY - prevMouse.y) * 0.003;
-      targetTheta -= dx;
-      targetPhi = Math.max(0.05, Math.min(0.6, targetPhi - dy));
-      prevMouse = { x: e.clientX, y: e.clientY };
-    }
-  });
-
-  document.addEventListener('mouseup', e => {
-    if (!isDragging) return;
-    isDragging = false;
-
-    // Raycasting en click
-    raycaster.setFromCamera(mouse, camera);
-    const hits = raycaster.intersectObjects(scene.children, true);
-    for (const h of hits) {
-      if (h.object.userData.victimId !== undefined) {
-        selectVictim(h.object.userData.victimId);
-        break;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Santuarios de la Memoria — Recorrido Digital 3D</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Sora:wght@300;400;500;600&display=swap");
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
-    }
-  });
 
-  renderer.domElement.addEventListener('wheel', e => {
-    targetRadius = Math.max(5, Math.min(30, targetRadius + e.deltaY * 0.02));
-  });
-
-  window.addEventListener('resize', () => {
-    camera.aspect = innerWidth/innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(innerWidth, innerHeight);
-  });
-}
-
-function selectVictim(id) {
-  const v = victims[id];
-  document.getElementById('victim-name').textContent = v.name;
-  document.getElementById('victim-dates').textContent = v.dates + ' · Samaná, Caldas';
-  document.getElementById('victim-initial').textContent = v.initial;
-  document.getElementById('victim-bio').textContent = v.bio;
-  document.getElementById('offerings-count').textContent = `${v.ofrendas} ofrendas · ${v.mensajes} mensajes`;
-  document.getElementById('zone-name').textContent = v.zone;
-  document.getElementById('victim-panel').classList.add('open');
-
-  // Mover cámara hacia el memorial
-  const m = memorials[id];
-  const p = m.position;
-  targetTheta = Math.atan2(p.x, p.z + 5);
-  targetRadius = 9;
-  camTarget.set(p.x, 1, p.z);
-
-  // Reset offering buttons
-  document.querySelectorAll('.offering-btn').forEach(b => b.classList.remove('placed'));
-}
-
-// ─── ANIMACIÓN ───────────────────────────────────────────────────────────────
-function animate() {
-  animFrame = requestAnimationFrame(animate);
-  const t = clock.getElapsedTime();
-  const delta = clock.getDelta ? 0.016 : 0.016;
-
-  // Suavizar cámara
-  camTheta += (targetTheta - camTheta) * 0.05;
-  camPhi += (targetPhi - camPhi) * 0.05;
-  camRadius += (targetRadius - camRadius) * 0.05;
-
-  const cx = camTarget.x + camRadius * Math.sin(camTheta) * Math.cos(camPhi);
-  const cy = camTarget.y + camRadius * Math.sin(camPhi) + 1;
-  const cz = camTarget.z + camRadius * Math.cos(camTheta) * Math.cos(camPhi);
-
-  camera.position.set(cx, cy, cz);
-  camera.lookAt(camTarget);
-
-  // Tour automático
-  if (isAutoTour) {
-    autoAngle += 0.003;
-    targetTheta = autoAngle;
-    if (Math.floor(autoAngle / (Math.PI * 0.8)) !== tourTarget) {
-      tourTarget = Math.floor(autoAngle / (Math.PI * 0.8));
-      const idx = tourTarget % victims.length;
-      selectVictim(idx);
-    }
-  }
-
-  // Parpadeo de llamas
-  flames.forEach(f => {
-    f.light.intensity = f.base + Math.sin(t * 8 + f.offset) * 0.3 + Math.sin(t * 13 + f.offset) * 0.15;
-  });
-
-  // Partículas flotantes
-  particles3D.forEach(pts => {
-    const pos = pts.geometry.attributes.position.array;
-    for (let i = 1; i < pos.length; i += 3) {
-      pos[i] += 0.003;
-      if (pos[i] > 8) pos[i] = 0.1;
-    }
-    pts.geometry.attributes.position.needsUpdate = true;
-  });
-
-  // Hover highlight en memoriales
-  raycaster.setFromCamera(mouse, camera);
-  const hits = raycaster.intersectObjects(scene.children, true);
-  document.body.style.cursor = 'none';
-  memorials.forEach(m => {
-    m.children.forEach(c => {
-      if (c.material && !c.material.visible === false) {
-        if (c.material.emissive) c.material.emissiveIntensity = 0.1;
+      :root {
+        --brand: #3a5a40;
+        --brand-strong: #2e4739;
+        --accent: #b2916f;
+        --bg: #f9f5ed;
+        --surface: #fffaf3;
+        --gold: #c9a96e;
+        --candle: #ffb347;
+        --flower: #e6a0b0;
+        --stone: #a89880;
+        --warm-dark: #3d2e1e;
       }
-    });
-  });
-  for (const h of hits) {
-    if (h.object.userData.victimId !== undefined) {
-      const m = memorials[h.object.userData.victimId];
-      m.children.forEach(c => {
-        if (c.material && c.material.emissive) c.material.emissiveIntensity = 0.5;
+
+      body {
+        background: #1a2f23;
+        font-family: "Sora", sans-serif;
+        overflow: hidden;
+        color: #f9f5ed;
+        cursor: none;
+      }
+
+      #cursor {
+        position: fixed;
+        width: 18px;
+        height: 18px;
+        border: 2px solid var(--gold);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9999;
+        transform: translate(-50%, -50%);
+        transition:
+          transform 0.1s,
+          background 0.2s;
+        mix-blend-mode: difference;
+      }
+      #cursor.hovering {
+        transform: translate(-50%, -50%) scale(2.5);
+        background: rgba(201, 169, 110, 0.2);
+      }
+
+      canvas {
+        display: block;
+      }
+
+      /* PANTALLA DE BIENVENIDA */
+      #intro {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(
+          135deg,
+          #2e4739 0%,
+          #3a5a40 40%,
+          #5a7a50 70%,
+          #c9a96e 100%
+        );
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        transition: opacity 1.5s ease;
+      }
+      #intro.fade-out {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .intro-particles {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+      }
+      .particle {
+        position: absolute;
+        width: 3px;
+        height: 3px;
+        background: rgba(255, 220, 160, 0.8);
+        border-radius: 50%;
+        animation: drift linear infinite;
+        opacity: 0;
+      }
+      @keyframes drift {
+        0% {
+          transform: translateY(100vh) translateX(0);
+          opacity: 0;
+        }
+        10% {
+          opacity: 0.7;
+        }
+        90% {
+          opacity: 0.3;
+        }
+        100% {
+          transform: translateY(-10vh) translateX(var(--drift));
+          opacity: 0;
+        }
+      }
+
+      .intro-content {
+        position: relative;
+        text-align: center;
+        max-width: 640px;
+        padding: 2rem;
+      }
+
+      .intro-eyebrow {
+        font-family: "Sora", sans-serif;
+        font-size: 0.7rem;
+        letter-spacing: 0.35em;
+        color: rgba(255, 250, 235, 0.85);
+        text-transform: uppercase;
+        margin-bottom: 1.5rem;
+        opacity: 0;
+        animation: fadeUp 1s 0.5s forwards;
+      }
+
+      .intro-title {
+        font-family: "Fraunces", serif;
+        font-size: clamp(2.2rem, 6vw, 4rem);
+        font-weight: 300;
+        line-height: 1.15;
+        color: var(--bg);
+        margin-bottom: 0.5rem;
+        opacity: 0;
+        animation: fadeUp 1s 0.8s forwards;
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+      }
+      .intro-title em {
+        font-style: italic;
+        color: #ffe8b8;
+      }
+
+      .intro-sub {
+        font-size: 0.9rem;
+        color: rgba(255, 250, 240, 0.75);
+        line-height: 1.7;
+        margin-bottom: 2.5rem;
+        opacity: 0;
+        animation: fadeUp 1s 1.1s forwards;
+      }
+
+      .intro-divider {
+        width: 60px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #ffe8b8, transparent);
+        margin: 1.5rem auto;
+        opacity: 0;
+        animation: fadeUp 1s 1s forwards;
+      }
+
+      .btn-enter {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.9rem 2.2rem;
+        border: 1px solid rgba(255, 240, 210, 0.6);
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(10px);
+        color: #fffaeb;
+        font-family: "Sora", sans-serif;
+        font-size: 0.8rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        cursor: none;
+        transition: all 0.4s;
+        opacity: 0;
+        animation: fadeUp 1s 1.4s forwards;
+        position: relative;
+        overflow: hidden;
+        border-radius: 4px;
+      }
+      .btn-enter::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 220, 160, 0.25);
+        transform: translateX(-100%);
+        transition: transform 0.4s;
+        z-index: -1;
+      }
+      .btn-enter:hover::before {
+        transform: translateX(0);
+      }
+      .btn-enter:hover {
+        color: #fff;
+        border-color: rgba(255, 240, 210, 0.9);
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* CONTROLES EN ESCENA */
+      #hud {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 50;
+        opacity: 0;
+        transition: opacity 1s 0.5s;
+      }
+      #hud.visible {
+        opacity: 1;
+      }
+
+      .hud-header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 1.2rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(
+          180deg,
+          rgba(251, 246, 235, 0.18),
+          rgba(46, 71, 57, 0.42)
+        );
+        backdrop-filter: blur(18px) saturate(135%);
+        border-bottom: 1px solid rgba(237, 213, 164, 0.28);
+        box-shadow: 0 14px 34px rgba(28, 33, 18, 0.18);
+      }
+
+      .hud-logo {
+        font-family: "Fraunces", serif;
+        font-size: 1rem;
+        font-weight: 300;
+        color: var(--bg);
+        letter-spacing: 0.05em;
+      }
+      .hud-logo span {
+        color: var(--gold);
+      }
+
+      .hud-nav {
+        display: flex;
+        gap: 0.5rem;
+        pointer-events: all;
+      }
+
+      .hud-btn {
+        padding: 0.45rem 1rem;
+        border: 1px solid rgba(201, 169, 110, 0.35);
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(10px);
+        color: rgba(249, 245, 237, 0.8);
+        font-family: "Fraunces", serif;
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        cursor: none;
+        transition: all 0.3s;
+        border-radius: 4px;
+      }
+      .hud-btn:hover,
+      .hud-btn.active {
+        border-color: var(--gold);
+        color: var(--gold);
+        background: rgba(201, 169, 110, 0.12);
+      }
+
+      /* PANEL LATERAL */
+      #victim-panel {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 340px;
+        background: linear-gradient(
+          180deg,
+          rgba(251, 246, 235, 0.12),
+          rgba(46, 71, 57, 0.62)
+        );
+        backdrop-filter: blur(26px) saturate(140%);
+        border-left: 1px solid rgba(237, 213, 164, 0.28);
+        box-shadow: -20px 0 36px rgba(24, 26, 18, 0.2);
+        padding: 5.5rem 2rem 2rem;
+        transform: translateX(100%);
+        transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        pointer-events: all;
+        overflow-y: auto;
+      }
+      #victim-panel.open {
+        transform: translateX(0);
+      }
+
+      .panel-close {
+        position: absolute;
+        top: 5rem;
+        right: 1.5rem;
+        background: none;
+        border: none;
+        color: rgba(249, 245, 237, 0.5);
+        font-size: 1.4rem;
+        cursor: none;
+        transition: color 0.2s;
+        line-height: 1;
+      }
+      .panel-close:hover {
+        color: var(--gold);
+      }
+
+      .victim-photo {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--gold);
+        margin-bottom: 1rem;
+        filter: sepia(10%) brightness(1.05);
+      }
+
+      .victim-photo-placeholder {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #5a7a50, var(--brand-strong));
+        border: 2px solid var(--gold);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Fraunces", serif;
+        font-size: 2rem;
+        color: #ffe8b8;
+      }
+
+      .victim-name {
+        font-family: "Fraunces", serif;
+        font-size: 1.35rem;
+        font-weight: 300;
+        color: var(--bg);
+        margin-bottom: 0.2rem;
+      }
+
+      .victim-dates {
+        font-size: 0.72rem;
+        color: var(--gold);
+        letter-spacing: 0.1em;
+        margin-bottom: 1rem;
+      }
+
+      .victim-bio {
+        font-size: 0.8rem;
+        line-height: 1.75;
+        color: rgba(249, 245, 237, 0.7);
+        margin-bottom: 1.5rem;
+      }
+
+      .offerings-title {
+        font-size: 0.65rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .offerings-title::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: rgba(201, 169, 110, 0.3);
+      }
+
+      .offering-btns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .offering-btn {
+        padding: 0.75rem;
+        border: 1px solid rgba(201, 169, 110, 0.3);
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(6px);
+        color: rgba(249, 245, 237, 0.75);
+        font-family: "Fraunces", serif;
+        font-size: 0.72rem;
+        cursor: none;
+        transition: all 0.3s;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 6px;
+      }
+      .offering-btn:hover {
+        border-color: var(--gold);
+        color: var(--gold);
+        background: rgba(201, 169, 110, 0.1);
+      }
+      .offering-btn.placed {
+        border-color: #b88a5a;
+        color: #ffe0a0;
+        background: rgba(201, 169, 110, 0.15);
+      }
+
+      .offering-icon {
+        font-size: 1.5rem;
+      }
+
+      .offerings-count {
+        font-size: 0.7rem;
+        color: rgba(249, 245, 237, 0.45);
+        text-align: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .message-area {
+        margin-bottom: 1.5rem;
+      }
+      .message-area label {
+        display: block;
+        font-size: 0.65rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 0.5rem;
+        font-family: "Fraunces", serif;
+      }
+      .message-area textarea {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(201, 169, 110, 0.2);
+        color: rgba(249, 245, 237, 0.85);
+        font-family: "Sora", sans-serif;
+        font-size: 0.75rem;
+        padding: 0.75rem;
+        resize: none;
+        height: 80px;
+        outline: none;
+        transition: border-color 0.2s;
+        border-radius: 6px;
+      }
+      .message-area textarea:focus {
+        border-color: rgba(201, 169, 110, 0.5);
+      }
+      .message-area textarea::placeholder {
+        color: rgba(249, 245, 237, 0.3);
+      }
+
+      .btn-tribute {
+        width: 100%;
+        padding: 0.9rem;
+        background: linear-gradient(135deg, #b2916f, #9a7d5f);
+        border: none;
+        color: white;
+        font-family: "Fraunces", serif;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        cursor: none;
+        transition: opacity 0.3s;
+        border-radius: 6px;
+      }
+      .btn-tribute:hover {
+        opacity: 0.85;
+      }
+
+      /* CONTROLES DE NAVEGACION */
+      #nav-controls {
+        position: absolute;
+        bottom: 2.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        pointer-events: all;
+        padding: 0.8rem 1.1rem;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 248, 232, 0.12),
+          rgba(24, 27, 22, 0.38)
+        );
+        border: 1px solid rgba(237, 213, 164, 0.24);
+        border-radius: 999px;
+        backdrop-filter: blur(18px) saturate(130%);
+        box-shadow: 0 12px 30px rgba(22, 24, 16, 0.18);
+      }
+
+      .nav-hint {
+        font-size: 0.65rem;
+        letter-spacing: 0.12em;
+        color: rgba(249, 245, 237, 0.72);
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: "Fraunces", serif;
+      }
+
+      .key-badge {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border: 1px solid rgba(201, 169, 110, 0.3);
+        font-size: 0.6rem;
+        color: rgba(201, 169, 110, 0.7);
+        font-family: "Sora", sans-serif;
+        border-radius: 3px;
+      }
+
+      /* TOAST */
+      #toast {
+        position: fixed;
+        bottom: 6rem;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: rgba(46, 71, 57, 0.9);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--gold);
+        color: var(--bg);
+        font-family: "Fraunces", serif;
+        font-size: 0.82rem;
+        padding: 0.75rem 1.5rem;
+        opacity: 0;
+        transition: all 0.4s;
+        pointer-events: none;
+        z-index: 200;
+        white-space: nowrap;
+        border-radius: 6px;
+      }
+      #toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      /* CONTADOR */
+      .counter-bar {
+        position: absolute;
+        bottom: 2.5rem;
+        right: 2rem;
+        text-align: right;
+      }
+      .counter-num {
+        font-family: "Fraunces", serif;
+        font-size: 2.5rem;
+        font-weight: 300;
+        color: rgba(201, 169, 110, 0.55);
+        line-height: 1;
+      }
+      .counter-label {
+        font-size: 0.6rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(249, 245, 237, 0.35);
+        font-family: "Fraunces", serif;
+      }
+
+      /* MINIMAP / POSICION */
+      .position-indicator {
+        position: absolute;
+        bottom: 2.5rem;
+        left: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .pos-label {
+        font-size: 0.6rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: rgba(249, 245, 237, 0.35);
+        font-family: "Fraunces", serif;
+      }
+      .pos-value {
+        font-family: "Fraunces", serif;
+        font-size: 0.9rem;
+        color: rgba(201, 169, 110, 0.6);
+      }
+
+      /* Crosshair */
+      #crosshair {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 20px;
+        height: 20px;
+        pointer-events: none;
+        z-index: 60;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      #crosshair.active {
+        opacity: 1;
+      }
+      #crosshair::before,
+      #crosshair::after {
+        content: "";
+        position: absolute;
+        background: rgba(201, 169, 110, 0.5);
+      }
+      #crosshair::before {
+        width: 1px;
+        height: 100%;
+        top: 0;
+        left: 50%;
+      }
+      #crosshair::after {
+        height: 1px;
+        width: 100%;
+        top: 50%;
+        left: 0;
+      }
+
+      .click-hint {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.65rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: rgba(201, 169, 110, 0.6);
+        white-space: nowrap;
+        pointer-events: none;
+        animation: pulse 2s infinite;
+        font-family: "Fraunces", serif;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.4;
+        }
+        50% {
+          opacity: 0.9;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="cursor"></div>
+    <div id="crosshair"></div>
+    <div id="toast">Ofrenda depositada con amor</div>
+
+    <!-- INTRO -->
+    <div id="intro">
+      <div class="intro-particles" id="particles"></div>
+      <div class="intro-content">
+        <p class="intro-eyebrow">Universidad de Caldas · PRY-335 · Samana</p>
+        <h1 class="intro-title">Santuarios de<br /><em>la Memoria</em></h1>
+        <div class="intro-divider"></div>
+        <p class="intro-sub">
+          Un espacio digital para honrar a quienes ya no estan.<br />Camina
+          entre los santuarios, encuentra a tu familiar<br />y deja una ofrenda
+          de luz.
+        </p>
+        <button class="btn-enter" id="btn-enter">
+          <span>Entrar al recorrido</span>
+          <span>&rarr;</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- HUD EN ESCENA -->
+    <div id="hud">
+      <div class="hud-header">
+        <div class="hud-logo">Santuarios <span>de la Memoria</span></div>
+        <div class="hud-nav">
+          <button class="hud-btn active" id="btn-free">Recorrido libre</button>
+          <button class="hud-btn" id="btn-search">Buscar victima</button>
+          <button class="hud-btn" id="btn-tour">Visita guiada</button>
+        </div>
+      </div>
+
+      <!-- Panel lateral victima -->
+      <div id="victim-panel">
+        <button class="panel-close" id="panel-close">&times;</button>
+        <div class="victim-photo-placeholder" id="victim-initial">G</div>
+        <div class="victim-name" id="victim-name">Gabriel Ospina Rios</div>
+        <div class="victim-dates" id="victim-dates">
+          1958 - 1998 · Samana, Caldas
+        </div>
+        <p class="victim-bio" id="victim-bio">
+          Agricultor y padre de familia. Desaparecio el 14 de marzo de 1998 en
+          la vereda El Jardin. Su familia lo recuerda como un hombre generoso
+          que amaba la tierra y cantaba vallenatos en las madrugadas.
+        </p>
+
+        <div class="offerings-title">Ofrendas depositadas</div>
+        <div class="offering-btns">
+          <button
+            class="offering-btn"
+            data-type="candle"
+            onclick="placeOffering('candle')"
+          >
+            <span class="offering-icon">&#x1F56F;&#xFE0F;</span>
+            <span>Encender vela</span>
+          </button>
+          <button
+            class="offering-btn"
+            data-type="flower"
+            onclick="placeOffering('flower')"
+          >
+            <span class="offering-icon">&#x1F339;</span>
+            <span>Dejar flor</span>
+          </button>
+          <button
+            class="offering-btn"
+            data-type="candle2"
+            onclick="placeOffering('candle2')"
+          >
+            <span class="offering-icon">&#x1F33C;</span>
+            <span>Flor silvestre</span>
+          </button>
+          <button
+            class="offering-btn"
+            data-type="cross"
+            onclick="placeOffering('cross')"
+          >
+            <span class="offering-icon">&#x1F4FF;</span>
+            <span>Rosario</span>
+          </button>
+        </div>
+
+        <div class="offerings-count" id="offerings-count">
+          23 ofrendas - 7 mensajes
+        </div>
+
+        <div class="message-area">
+          <label>Deja un mensaje</label>
+          <textarea
+            placeholder="Escribe unas palabras para recordarlo..."
+          ></textarea>
+        </div>
+
+        <button class="btn-tribute" onclick="sendTribute()">
+          Enviar homenaje
+        </button>
+      </div>
+
+      <!-- Controles inferiores -->
+      <div id="nav-controls">
+        <div class="nav-hint">
+          <span class="key-badge">Click</span> acercar &middot;
+          <span class="key-badge">Drag</span> rotar &middot;
+          <span class="key-badge">Scroll</span> zoom
+        </div>
+      </div>
+
+      <div class="counter-bar">
+        <div class="counter-num">147</div>
+        <div class="counter-label">memoriales activos</div>
+      </div>
+
+      <div class="position-indicator">
+        <div class="pos-label">Zona actual</div>
+        <div class="pos-value" id="zone-name">Galeria Principal</div>
+        <p class="click-hint">Haz clic en un memorial para visitarlo</p>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/FXAAShader.js"></script>
+    <script>
+      // PARTICULAS INTRO
+      var particlesContainer = document.getElementById("particles");
+      for (var i = 0; i < 60; i++) {
+        var p = document.createElement("div");
+        p.className = "particle";
+        p.style.cssText =
+          "left:" +
+          Math.random() * 100 +
+          "%;" +
+          "animation-duration:" +
+          (4 + Math.random() * 8) +
+          "s;" +
+          "animation-delay:" +
+          Math.random() * 5 +
+          "s;" +
+          "--drift:" +
+          (Math.random() - 0.5) * 200 +
+          "px;" +
+          "width:" +
+          (1 + Math.random() * 3) +
+          "px;" +
+          "height:" +
+          (1 + Math.random() * 3) +
+          "px;" +
+          "opacity:" +
+          (0.3 + Math.random() * 0.5) +
+          ";";
+        particlesContainer.appendChild(p);
+      }
+
+      // CURSOR
+      var cursor = document.getElementById("cursor");
+      document.addEventListener("mousemove", function (e) {
+        cursor.style.left = e.clientX + "px";
+        cursor.style.top = e.clientY + "px";
       });
-      break;
-    }
-  }
+      document.querySelectorAll("button, textarea").forEach(function (el) {
+        el.addEventListener("mouseenter", function () {
+          cursor.classList.add("hovering");
+        });
+        el.addEventListener("mouseleave", function () {
+          cursor.classList.remove("hovering");
+        });
+      });
 
-  renderer.render(scene, camera);
-}
+      // DATOS DE VICTIMAS
+      var victims = [
+        {
+          name: "Gabriel Ospina Rios",
+          dates: "1958 - 1998",
+          initial: "G",
+          bio: "Agricultor y padre de familia. Desaparecio el 14 de marzo de 1998 en la vereda El Jardin. Su familia lo recuerda como un hombre generoso que amaba la tierra.",
+          ofrendas: 23,
+          mensajes: 7,
+          zone: "Galeria Principal",
+        },
+        {
+          name: "Esperanza Duque Llano",
+          dates: "1965 - 2001",
+          initial: "E",
+          bio: "Maestra rural de la escuela El Porvenir. Dedico su vida a ensenar a ninos en zonas remotas de Samana. Madre de tres hijos.",
+          ofrendas: 41,
+          mensajes: 15,
+          zone: "Jardin del Recuerdo",
+        },
+        {
+          name: "Luis Angel Cardona",
+          dates: "1972 - 1999",
+          initial: "L",
+          bio: "Joven lider comunitario de la vereda La Rica. Promovia la paz entre vecinos y sonaba con ser veterinario.",
+          ofrendas: 18,
+          mensajes: 9,
+          zone: "Capilla de la Paz",
+        },
+        {
+          name: "Maria Ines Zuluaga",
+          dates: "1950 - 2002",
+          initial: "M",
+          bio: "Parteira y curandera conocida en toda la region. Trajo al mundo a cientos de ninos. Sus remedios de plantas son aun recordados.",
+          ofrendas: 57,
+          mensajes: 22,
+          zone: "Galeria Principal",
+        },
+        {
+          name: "Carlos Emilio Hurtado",
+          dates: "1968 - 2000",
+          initial: "C",
+          bio: "Campesino cafetero. Padre de cuatro hijos. Desaparecio cuando regresaba del mercado de La Dorada.",
+          ofrendas: 12,
+          mensajes: 4,
+          zone: "Sendero de la Memoria",
+        },
+        {
+          name: "Rosa Elena Betancur",
+          dates: "1979 - 2003",
+          initial: "R",
+          bio: "Joven de 24 anos que trabajaba como enfermera en el centro de salud de Samana. Amante de la musica y el teatro.",
+          ofrendas: 35,
+          mensajes: 11,
+          zone: "Jardin del Recuerdo",
+        },
+        {
+          name: "Hector Fabio Monsalve",
+          dates: "1955 - 1997",
+          initial: "H",
+          bio: "Comerciante y musico. Tocaba tiple en las festividades del pueblo. Padre y esposo ejemplar segun sus vecinos.",
+          ofrendas: 29,
+          mensajes: 8,
+          zone: "Capilla de la Paz",
+        },
+      ];
 
-// ─── INTERACCIONES ───────────────────────────────────────────────────────────
-function placeOffering(type) {
-  const btn = document.querySelector(`[data-type="${type}"]`);
-  btn.classList.toggle('placed');
-  const icons = { candle: '🕯️ Vela encendida', flower: '🌹 Flor depositada', candle2: '🌼 Flor silvestre', cross: '📿 Rosario colocado' };
-  showToast(icons[type] + ' con amor');
+      // ESCENA THREE.JS
+      var scene, camera, renderer, clock, composer, fxaaPass;
+      var memorials = [];
+      var particles3D = [];
+      var flames = [];
+      var butterflies = [];
+      var currentVictim = null;
+      var animFrame;
+      var mouse = new THREE.Vector2();
+      var raycaster = new THREE.Raycaster();
+      var isAutoTour = false;
+      var autoAngle = 0;
+      var tourTarget = 0;
+      var textureCache = {};
 
-  // Actualizar contador
-  const countEl = document.getElementById('offerings-count');
-  const match = countEl.textContent.match(/(\d+) ofrendas/);
-  if (match) {
-    const n = btn.classList.contains('placed') ? +match[1] + 1 : +match[1] - 1;
-    countEl.textContent = countEl.textContent.replace(/\d+ ofrendas/, `${n} ofrendas`);
-  }
-}
+      function createCanvasTexture(size, painter) {
+        var canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        var context = canvas.getContext("2d");
+        painter(context, size);
+        var texture = new THREE.CanvasTexture(canvas);
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.needsUpdate = true;
+        return texture;
+      }
 
-function sendTribute() {
-  const ta = document.querySelector('.message-area textarea');
-  if (ta.value.trim()) {
-    showToast('💌 Homenaje enviado. Gracias por recordar.');
-    ta.value = '';
-  } else {
-    showToast('✍️ Escribe un mensaje antes de enviar');
-  }
-}
+      function getGroundTexture() {
+        if (textureCache.ground) return textureCache.ground;
+        textureCache.ground = createCanvasTexture(
+          2048,
+          function (context, size) {
+            var gradient = context.createLinearGradient(0, 0, 0, size);
+            gradient.addColorStop(0, "#4f8742");
+            gradient.addColorStop(0.45, "#467d3b");
+            gradient.addColorStop(1, "#3d7034");
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, size, size);
 
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(t._tid);
-  t._tid = setTimeout(() => t.classList.remove('show'), 3500);
-}
+            for (var i = 0; i < 26000; i++) {
+              var alpha = 0.012 + Math.random() * 0.032;
+              var green = 88 + Math.floor(Math.random() * 32);
+              var red = 48 + Math.floor(Math.random() * 16);
+              var blue = 32 + Math.floor(Math.random() * 12);
+              context.fillStyle =
+                "rgba(" + red + "," + green + "," + blue + "," + alpha + ")";
+              context.fillRect(
+                Math.random() * size,
+                Math.random() * size,
+                0.8 + Math.random() * 1.6,
+                7 + Math.random() * 10,
+              );
+            }
 
-// ─── BOTONES HUD ─────────────────────────────────────────────────────────────
-document.getElementById('btn-free').addEventListener('click', () => {
-  isAutoTour = false;
-  document.querySelectorAll('.hud-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('btn-free').classList.add('active');
-  targetRadius = 18;
-  camTarget.set(0,1,-4);
-  document.getElementById('victim-panel').classList.remove('open');
-});
+            for (var j = 0; j < 1100; j++) {
+              context.strokeStyle =
+                "rgba(126,170,108," + (0.012 + Math.random() * 0.02) + ")";
+              context.lineWidth = 0.35 + Math.random() * 0.45;
+              context.beginPath();
+              context.moveTo(Math.random() * size, Math.random() * size);
+              context.bezierCurveTo(
+                Math.random() * size,
+                Math.random() * size,
+                Math.random() * size,
+                Math.random() * size,
+                Math.random() * size,
+                Math.random() * size,
+              );
+              context.stroke();
+            }
 
-document.getElementById('btn-search').addEventListener('click', () => {
-  const idx = Math.floor(Math.random() * victims.length);
-  selectVictim(idx);
-  document.querySelectorAll('.hud-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('btn-search').classList.add('active');
-});
+            for (var k = 0; k < 4200; k++) {
+              var softShade = 58 + Math.floor(Math.random() * 26);
+              var softGreen = 94 + Math.floor(Math.random() * 28);
+              context.fillStyle =
+                "rgba(" +
+                softShade +
+                "," +
+                softGreen +
+                "," +
+                (softShade - 12) +
+                "," +
+                (0.01 + Math.random() * 0.016) +
+                ")";
+              context.fillRect(
+                Math.random() * size,
+                Math.random() * size,
+                12 + Math.random() * 38,
+                12 + Math.random() * 38,
+              );
+            }
+          },
+        );
+        textureCache.ground.repeat.set(1, 1);
+        return textureCache.ground;
+      }
 
-document.getElementById('btn-tour').addEventListener('click', () => {
-  isAutoTour = !isAutoTour;
-  document.getElementById('btn-tour').classList.toggle('active', isAutoTour);
-  document.getElementById('btn-tour').textContent = isAutoTour ? 'Detener tour' : 'Visita guiada';
-  targetRadius = 10;
-});
+      function getGroundNormalTexture() {
+        if (textureCache.groundNormal) return textureCache.groundNormal;
+        textureCache.groundNormal = createCanvasTexture(
+          1024,
+          function (context, size) {
+            context.fillStyle = "rgb(128,128,255)";
+            context.fillRect(0, 0, size, size);
 
-document.getElementById('panel-close').addEventListener('click', () => {
-  document.getElementById('victim-panel').classList.remove('open');
-  isAutoTour = false;
-  targetRadius = 18;
-  camTarget.set(0,1,-4);
-});
+            for (var i = 0; i < 12000; i++) {
+              var nx = 118 + Math.floor(Math.random() * 20);
+              var ny = 118 + Math.floor(Math.random() * 20);
+              var nz = 232 + Math.floor(Math.random() * 20);
+              context.fillStyle =
+                "rgba(" +
+                nx +
+                "," +
+                ny +
+                "," +
+                nz +
+                "," +
+                (0.06 + Math.random() * 0.06) +
+                ")";
+              context.fillRect(
+                Math.random() * size,
+                Math.random() * size,
+                1 + Math.random() * 2,
+                6 + Math.random() * 10,
+              );
+            }
+          },
+        );
+        textureCache.groundNormal.repeat.set(1, 1);
+        return textureCache.groundNormal;
+      }
 
-// ─── ENTRADA ──────────────────────────────────────────────────────────────────
-document.getElementById('btn-enter').addEventListener('click', () => {
-  const intro = document.getElementById('intro');
-  intro.classList.add('fade-out');
-  const hud = document.getElementById('hud');
-  setTimeout(() => {
-    intro.style.display = 'none';
-    hud.classList.add('visible');
-    initThree();
-  }, 1500);
-});
+      function getGroundRoughnessTexture() {
+        if (textureCache.groundRoughness) return textureCache.groundRoughness;
+        textureCache.groundRoughness = createCanvasTexture(
+          1024,
+          function (context, size) {
+            context.fillStyle = "rgb(208,208,208)";
+            context.fillRect(0, 0, size, size);
 
-// Agregar event listeners de hover para cursor en HUD
-document.querySelectorAll('.hud-btn, .hud-nav button, .offering-btn, .btn-tribute, .panel-close').forEach(el => {
-  el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
-  el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
-});
-</script>
-</body>
+            for (var i = 0; i < 5000; i++) {
+              var shade = 170 + Math.floor(Math.random() * 45);
+              context.fillStyle =
+                "rgba(" +
+                shade +
+                "," +
+                shade +
+                "," +
+                shade +
+                "," +
+                (0.03 + Math.random() * 0.05) +
+                ")";
+              context.fillRect(
+                Math.random() * size,
+                Math.random() * size,
+                8 + Math.random() * 26,
+                8 + Math.random() * 26,
+              );
+            }
+          },
+        );
+        textureCache.groundRoughness.repeat.set(1, 1);
+        return textureCache.groundRoughness;
+      }
+
+      function getGroundDisplacementTexture() {
+        if (textureCache.groundDisplacement)
+          return textureCache.groundDisplacement;
+        textureCache.groundDisplacement = createCanvasTexture(
+          1024,
+          function (context, size) {
+            var gradient = context.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, "#808080");
+            gradient.addColorStop(1, "#969696");
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, size, size);
+
+            for (var i = 0; i < 8000; i++) {
+              var shade = 110 + Math.floor(Math.random() * 40);
+              context.fillStyle =
+                "rgba(" +
+                shade +
+                "," +
+                shade +
+                "," +
+                shade +
+                "," +
+                (0.025 + Math.random() * 0.03) +
+                ")";
+              context.beginPath();
+              context.arc(
+                Math.random() * size,
+                Math.random() * size,
+                3 + Math.random() * 16,
+                0,
+                Math.PI * 2,
+              );
+              context.fill();
+            }
+          },
+        );
+        textureCache.groundDisplacement.repeat.set(1, 1);
+        return textureCache.groundDisplacement;
+      }
+
+      function getStoneTexture() {
+        if (textureCache.stone) return textureCache.stone;
+        textureCache.stone = createCanvasTexture(256, function (context, size) {
+          context.fillStyle = "#9e8d76";
+          context.fillRect(0, 0, size, size);
+          for (var i = 0; i < 900; i++) {
+            var shade = 120 + Math.floor(Math.random() * 60);
+            context.fillStyle =
+              "rgba(" +
+              shade +
+              "," +
+              (shade - 10) +
+              "," +
+              (shade - 18) +
+              "," +
+              (0.08 + Math.random() * 0.12) +
+              ")";
+            context.beginPath();
+            context.arc(
+              Math.random() * size,
+              Math.random() * size,
+              1 + Math.random() * 4,
+              0,
+              Math.PI * 2,
+            );
+            context.fill();
+          }
+          for (var j = 0; j < 35; j++) {
+            context.strokeStyle =
+              "rgba(78,67,54," + (0.12 + Math.random() * 0.08) + ")";
+            context.lineWidth = 1 + Math.random() * 1.5;
+            context.beginPath();
+            context.moveTo(Math.random() * size, Math.random() * size);
+            context.lineTo(Math.random() * size, Math.random() * size);
+            context.stroke();
+          }
+        });
+        textureCache.stone.repeat.set(2, 2);
+        return textureCache.stone;
+      }
+
+      function getMarbleTexture() {
+        if (textureCache.marble) return textureCache.marble;
+        textureCache.marble = createCanvasTexture(
+          512,
+          function (context, size) {
+            var gradient = context.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, "#d6c3a5");
+            gradient.addColorStop(0.4, "#c4ae8a");
+            gradient.addColorStop(0.75, "#a98f6d");
+            gradient.addColorStop(1, "#90765a");
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, size, size);
+
+            for (var i = 0; i < 80; i++) {
+              context.strokeStyle =
+                "rgba(255,245,222," + (0.08 + Math.random() * 0.12) + ")";
+              context.lineWidth = 1 + Math.random() * 2.5;
+              context.beginPath();
+              var startY = Math.random() * size;
+              context.moveTo(-20, startY);
+              for (var x = 0; x < size + 40; x += 35) {
+                context.lineTo(
+                  x,
+                  startY +
+                    Math.sin((x / size) * Math.PI * (1 + Math.random() * 2)) *
+                      (8 + Math.random() * 16) +
+                    (Math.random() - 0.5) * 10,
+                );
+              }
+              context.stroke();
+            }
+
+            for (var j = 0; j < 1400; j++) {
+              var dust = 185 + Math.floor(Math.random() * 45);
+              context.fillStyle =
+                "rgba(" +
+                dust +
+                "," +
+                (dust - 10) +
+                "," +
+                (dust - 18) +
+                "," +
+                (0.015 + Math.random() * 0.03) +
+                ")";
+              context.fillRect(
+                Math.random() * size,
+                Math.random() * size,
+                1 + Math.random() * 2,
+                1 + Math.random() * 2,
+              );
+            }
+          },
+        );
+        textureCache.marble.repeat.set(1, 1);
+        return textureCache.marble;
+      }
+
+      function getLeafTexture() {
+        if (textureCache.leaf) return textureCache.leaf;
+        textureCache.leaf = createCanvasTexture(256, function (context, size) {
+          context.clearRect(0, 0, size, size);
+          var gradient = context.createRadialGradient(
+            size / 2,
+            size / 2,
+            10,
+            size / 2,
+            size / 2,
+            size / 2,
+          );
+          gradient.addColorStop(0, "rgba(102,138,79,0.95)");
+          gradient.addColorStop(0.5, "rgba(70,108,57,0.92)");
+          gradient.addColorStop(1, "rgba(42,70,34,0)");
+          context.fillStyle = gradient;
+          context.beginPath();
+          context.arc(size / 2, size / 2, size / 2.8, 0, Math.PI * 2);
+          context.fill();
+        });
+        return textureCache.leaf;
+      }
+
+      function buildRealisticTree(position, scale) {
+        var treeGroup = new THREE.Group();
+        var barkTexture = getStoneTexture();
+        var trunk = new THREE.Mesh(
+          new THREE.CylinderGeometry(
+            0.16 * scale,
+            0.26 * scale,
+            4.2 * scale,
+            10,
+          ),
+          new THREE.MeshStandardMaterial({
+            color: 0x5d4534,
+            map: barkTexture,
+            bumpMap: barkTexture,
+            bumpScale: 0.04,
+            roughness: 0.95,
+          }),
+        );
+        trunk.position.y = 2.1 * scale;
+        trunk.castShadow = true;
+        treeGroup.add(trunk);
+
+        var leafMap = getLeafTexture();
+        var leafMaterial = new THREE.MeshStandardMaterial({
+          color: 0x517845,
+          map: leafMap,
+          alphaMap: leafMap,
+          transparent: true,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+          roughness: 0.9,
+        });
+
+        for (var i = 0; i < 18; i++) {
+          var crown = new THREE.Mesh(
+            new THREE.PlaneGeometry(
+              (1.6 + Math.random() * 1.5) * scale,
+              (1.8 + Math.random() * 1.2) * scale,
+            ),
+            leafMaterial.clone(),
+          );
+          crown.material.color.setHex(
+            0x476d3d + Math.floor(Math.random() * 0x060a04),
+          );
+          crown.position.set(
+            (Math.random() - 0.5) * 1.8 * scale,
+            (3.6 + Math.random() * 2.1) * scale,
+            (Math.random() - 0.5) * 1.8 * scale,
+          );
+          crown.rotation.y = Math.random() * Math.PI;
+          crown.rotation.x = (Math.random() - 0.5) * 0.25;
+          treeGroup.add(crown);
+        }
+
+        treeGroup.position.copy(position);
+        scene.add(treeGroup);
+      }
+
+      function buildTreeRing() {
+        for (var i = 0; i < 24; i++) {
+          var angle = (i / 24) * Math.PI * 2;
+          var radius = 35 + Math.random() * 16;
+          buildRealisticTree(
+            new THREE.Vector3(
+              Math.cos(angle) * radius,
+              0,
+              Math.sin(angle) * radius,
+            ),
+            0.85 + Math.random() * 0.55,
+          );
+        }
+      }
+
+      function setupPostProcessing() {
+        if (
+          !THREE.EffectComposer ||
+          !THREE.RenderPass ||
+          !THREE.ShaderPass ||
+          !THREE.UnrealBloomPass ||
+          !THREE.FXAAShader
+        ) {
+          composer = null;
+          fxaaPass = null;
+          return;
+        }
+
+        try {
+          composer = new THREE.EffectComposer(renderer);
+          var renderPass = new THREE.RenderPass(scene, camera);
+          composer.addPass(renderPass);
+
+          var bloomPass = new THREE.UnrealBloomPass(
+            new THREE.Vector2(innerWidth, innerHeight),
+            0.35,
+            0.6,
+            0.82,
+          );
+          composer.addPass(bloomPass);
+
+          fxaaPass = new THREE.ShaderPass(THREE.FXAAShader);
+          fxaaPass.material.uniforms.resolution.value.set(
+            1 / innerWidth,
+            1 / innerHeight,
+          );
+          composer.addPass(fxaaPass);
+        } catch (error) {
+          console.warn("Postprocessing disabled:", error);
+          composer = null;
+          fxaaPass = null;
+        }
+      }
+
+      function addGroundLife() {
+        for (var j = 0; j < 22; j++) {
+          var cluster = new THREE.Group();
+          var clusterX = (Math.random() - 0.5) * 22;
+          var clusterZ = -1 - Math.random() * 22;
+          for (var k = 0; k < 7; k++) {
+            var stem = new THREE.Mesh(
+              new THREE.CylinderGeometry(
+                0.008,
+                0.01,
+                0.18 + Math.random() * 0.08,
+                4,
+              ),
+              new THREE.MeshStandardMaterial({
+                color: 0x537a46,
+                roughness: 0.95,
+              }),
+            );
+            stem.position.set(
+              (Math.random() - 0.5) * 0.45,
+              0.09,
+              (Math.random() - 0.5) * 0.45,
+            );
+            cluster.add(stem);
+
+            var blossomColor = Math.random() > 0.45 ? 0xffffff : 0xf1b9c8;
+            var blossom = new THREE.Mesh(
+              new THREE.SphereGeometry(0.028 + Math.random() * 0.018, 6, 6),
+              new THREE.MeshStandardMaterial({
+                color: blossomColor,
+                roughness: 0.7,
+                emissive: blossomColor,
+                emissiveIntensity: 0.04,
+              }),
+            );
+            blossom.position.set(
+              stem.position.x,
+              stem.position.y + 0.12,
+              stem.position.z,
+            );
+            cluster.add(blossom);
+          }
+          cluster.position.set(clusterX, 0, clusterZ);
+          scene.add(cluster);
+        }
+      }
+
+      function initThree() {
+        scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0xc8d8e6, 0.008);
+
+        camera = new THREE.PerspectiveCamera(
+          60,
+          innerWidth / innerHeight,
+          0.1,
+          200,
+        );
+        camera.position.set(0, 3, 18);
+        camera.lookAt(0, 1, 0);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setSize(innerWidth, innerHeight);
+        renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.18;
+        document.body.prepend(renderer.domElement);
+
+        clock = new THREE.Clock();
+
+        buildScene();
+        buildParticles();
+        buildButterflies();
+        setupLights();
+        setupPostProcessing();
+        setupControls();
+        animate();
+      }
+
+      function buildScene() {
+        // SUELO - cesped plano tipo green
+        var floorGeo = new THREE.PlaneGeometry(120, 120, 180, 180);
+
+        var groundTexture = getGroundTexture();
+        var groundNormalTexture = getGroundNormalTexture();
+        var groundRoughnessTexture = getGroundRoughnessTexture();
+        var groundDisplacementTexture = getGroundDisplacementTexture();
+        var floorMat = new THREE.MeshStandardMaterial({
+          color: 0x4f8344,
+          map: groundTexture,
+          normalMap: groundNormalTexture,
+          roughnessMap: groundRoughnessTexture,
+          displacementMap: groundDisplacementTexture,
+          displacementScale: 0.012,
+          bumpMap: groundTexture,
+          bumpScale: 0.004,
+          roughness: 0.98,
+          metalness: 0.0,
+        });
+        var floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        addGroundLife();
+
+        // Piedras del sendero
+        var stoneTexture = getStoneTexture();
+        var stoneMat = new THREE.MeshStandardMaterial({
+          color: 0xa89880,
+          map: stoneTexture,
+          bumpMap: stoneTexture,
+          bumpScale: 0.04,
+          roughness: 0.9,
+          metalness: 0.02,
+        });
+        for (var z = 2; z >= -20; z -= 1.2) {
+          var sw = 0.5 + Math.random() * 0.3;
+          var sh = 0.5 + Math.random() * 0.3;
+          var stoneGeo = new THREE.BoxGeometry(sw, 0.06, sh);
+          var stone = new THREE.Mesh(stoneGeo, stoneMat);
+          stone.position.set((Math.random() - 0.5) * 1.5, 0.03, z);
+          stone.rotation.y = Math.random() * 0.5;
+          stone.receiveShadow = true;
+          scene.add(stone);
+        }
+
+        // Piedras decorativas laterales
+        for (var i = 0; i < 40; i++) {
+          var sw = 0.3 + Math.random() * 0.4;
+          var stoneGeo2 = new THREE.BoxGeometry(sw, 0.04, sw);
+          var s = new THREE.Mesh(stoneGeo2, stoneMat.clone());
+          s.material.color.setHex(
+            0x9a8972 + Math.floor(Math.random() * 0x101010),
+          );
+          s.position.set((Math.random() - 0.5) * 25, 0.02, Math.random() * -25);
+          s.rotation.y = Math.random() * Math.PI;
+          s.receiveShadow = true;
+          scene.add(s);
+        }
+
+        // CIELO - gradiente atmosferico natural tipo motor 3D
+        var skyGeo = new THREE.SphereGeometry(90, 32, 16);
+        var skyCanvas = document.createElement("canvas");
+        skyCanvas.width = 1024;
+        skyCanvas.height = 512;
+        var ctx = skyCanvas.getContext("2d");
+        var grad = ctx.createLinearGradient(0, 0, 0, 256);
+        grad.addColorStop(0, "#395f94");
+        grad.addColorStop(0.18, "#5d86ba");
+        grad.addColorStop(0.44, "#8bb2d8");
+        grad.addColorStop(0.72, "#d2e2ef");
+        grad.addColorStop(1, "#f8f4ec");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 1024, 512);
+
+        var horizonGlow = ctx.createRadialGradient(512, 345, 20, 512, 345, 300);
+        horizonGlow.addColorStop(0, "rgba(255,232,196,0.62)");
+        horizonGlow.addColorStop(0.3, "rgba(250,233,214,0.24)");
+        horizonGlow.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = horizonGlow;
+        ctx.fillRect(0, 0, 1024, 512);
+
+        for (var haze = 0; haze < 70; haze++) {
+          ctx.fillStyle =
+            "rgba(255,255,255," + (0.005 + Math.random() * 0.01) + ")";
+          ctx.fillRect(
+            0,
+            250 + Math.random() * 140,
+            1024,
+            3 + Math.random() * 10,
+          );
+        }
+
+        var skyTex = new THREE.CanvasTexture(skyCanvas);
+        var skyMat = new THREE.MeshBasicMaterial({
+          map: skyTex,
+          side: THREE.BackSide,
+        });
+        scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+        // Nubes suaves
+        var cloudMat = new THREE.MeshBasicMaterial({
+          color: 0xf7fbff,
+          transparent: true,
+          opacity: 0.12,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        });
+        for (var i = 0; i < 15; i++) {
+          var cw = 8 + Math.random() * 15;
+          var ch = 2 + Math.random() * 5;
+          var cloud = new THREE.Mesh(
+            new THREE.PlaneGeometry(cw, ch),
+            cloudMat.clone(),
+          );
+          cloud.material.opacity = 0.04 + Math.random() * 0.06;
+          cloud.position.set(
+            (Math.random() - 0.5) * 60,
+            30 + Math.random() * 20,
+            -20 + Math.random() * -40,
+          );
+          cloud.rotation.x = -0.1;
+          cloud.rotation.z = (Math.random() - 0.5) * 0.3;
+          scene.add(cloud);
+        }
+
+        buildTreeRing();
+
+        // MEMORIALES
+        var positions = [
+          [-5, 0, -2],
+          [0, 0, -4],
+          [5, 0, -2],
+          [-6, 0, -8],
+          [0, 0, -10],
+          [6, 0, -8],
+          [0, 0, -16],
+        ];
+
+        victims.forEach(function (v, i) {
+          var pos = positions[i] || [
+            Math.cos(i * 1.2) * 7,
+            0,
+            Math.sin(i * 1.2) * 7 - 6,
+          ];
+          var memorial = buildMemorial(v, pos);
+          memorials.push(memorial);
+        });
+
+        // NIEBLA BAJA suave verde/dorada
+        for (var i = 0; i < 12; i++) {
+          var fogPlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(8, 8),
+            new THREE.MeshBasicMaterial({
+              color: 0xd6e4df,
+              transparent: true,
+              opacity: 0.035,
+              depthWrite: false,
+            }),
+          );
+          fogPlane.rotation.x = -Math.PI / 2;
+          fogPlane.position.set(
+            (Math.random() - 0.5) * 30,
+            0.08,
+            Math.random() * -25 - 2,
+          );
+          scene.add(fogPlane);
+        }
+
+        // Neblina de horizonte para profundidad atmosferica
+        for (var h = 0; h < 5; h++) {
+          var horizonMist = new THREE.Mesh(
+            new THREE.PlaneGeometry(42 + h * 8, 7 + h * 1.4),
+            new THREE.MeshBasicMaterial({
+              color: 0xe5edf4,
+              transparent: true,
+              opacity: 0.04 - h * 0.005,
+              depthWrite: false,
+              side: THREE.DoubleSide,
+            }),
+          );
+          horizonMist.position.set(0, 2.4 + h * 0.75, -32 - h * 3);
+          scene.add(horizonMist);
+        }
+      }
+
+      function buildMemorial(victim, pos) {
+        var group = new THREE.Group();
+        group.position.set(pos[0], pos[1], pos[2]);
+        group.userData = { victim: victim, id: victims.indexOf(victim) };
+
+        // PEDESTAL de piedra tallada / marmol veteado
+        var marbleTexture = getMarbleTexture();
+        var marbleMaterial = new THREE.MeshStandardMaterial({
+          color: 0xc9ae87,
+          map: marbleTexture,
+          bumpMap: marbleTexture,
+          bumpScale: 0.05,
+          roughness: 0.84,
+          metalness: 0.03,
+        });
+        var sandstone = new THREE.MeshStandardMaterial({
+          color: 0xc4a87a,
+          map: marbleTexture,
+          bumpMap: marbleTexture,
+          bumpScale: 0.04,
+          roughness: 0.82,
+          metalness: 0.02,
+        });
+        var darkerStone = new THREE.MeshStandardMaterial({
+          color: 0xa89068,
+          map: marbleTexture,
+          bumpMap: marbleTexture,
+          bumpScale: 0.03,
+          roughness: 0.88,
+          metalness: 0.02,
+        });
+
+        // Escalon base ancho
+        var base1 = new THREE.Mesh(
+          new THREE.BoxGeometry(1.6, 0.12, 1.6),
+          darkerStone,
+        );
+        base1.position.y = 0.06;
+        base1.receiveShadow = true;
+        base1.castShadow = true;
+        group.add(base1);
+
+        // Segundo escalon
+        var base2 = new THREE.Mesh(
+          new THREE.BoxGeometry(1.3, 0.12, 1.3),
+          sandstone,
+        );
+        base2.position.y = 0.18;
+        base2.receiveShadow = true;
+        base2.castShadow = true;
+        group.add(base2);
+
+        // Estela / columna principal
+        var stela = new THREE.Mesh(
+          new THREE.BoxGeometry(0.8, 2.0, 0.2),
+          marbleMaterial.clone(),
+        );
+        stela.material.color.setHex(0xd4ba90);
+        stela.position.y = 1.24;
+        stela.castShadow = true;
+        stela.receiveShadow = true;
+        group.add(stela);
+
+        var sideReliefLeft = new THREE.Mesh(
+          new THREE.BoxGeometry(0.08, 1.72, 0.08),
+          darkerStone.clone(),
+        );
+        sideReliefLeft.position.set(-0.38, 1.2, 0.02);
+        group.add(sideReliefLeft);
+
+        var sideReliefRight = new THREE.Mesh(
+          new THREE.BoxGeometry(0.08, 1.72, 0.08),
+          darkerStone.clone(),
+        );
+        sideReliefRight.position.set(0.38, 1.2, 0.02);
+        group.add(sideReliefRight);
+
+        // Marco dorado decorativo
+        var frameMat = new THREE.MeshStandardMaterial({
+          color: 0xb8960b,
+          roughness: 0.35,
+          metalness: 0.65,
+        });
+        var frameOuter = new THREE.Mesh(
+          new THREE.BoxGeometry(0.72, 0.82, 0.04),
+          frameMat,
+        );
+        frameOuter.position.set(0, 1.3, 0.12);
+        group.add(frameOuter);
+
+        // Placa interior oscura (foto)
+        var plateMat = new THREE.MeshStandardMaterial({
+          color: 0x4a3b2c,
+          roughness: 0.62,
+          metalness: 0.08,
+        });
+        var plate = new THREE.Mesh(
+          new THREE.BoxGeometry(0.58, 0.68, 0.03),
+          plateMat,
+        );
+        plate.position.set(0, 1.3, 0.13);
+        group.add(plate);
+
+        var plaqueGlow = new THREE.Mesh(
+          new THREE.CircleGeometry(0.12, 16),
+          new THREE.MeshBasicMaterial({
+            color: 0xffd88d,
+            transparent: true,
+            opacity: 0.2,
+            depthWrite: false,
+          }),
+        );
+        plaqueGlow.position.set(0, 1.35, 0.16);
+        group.add(plaqueGlow);
+
+        // Capitel superior
+        var capGeo = new THREE.CylinderGeometry(0.12, 0.45, 0.18, 6);
+        var cap = new THREE.Mesh(capGeo, sandstone.clone());
+        cap.material.color.setHex(0xc8b088);
+        cap.position.y = 2.35;
+        cap.castShadow = true;
+        group.add(cap);
+
+        // Llama de vela principal sobre la piedra
+        buildWarmCandle(group, [0, 2.44, 0], true);
+
+        // Velas laterales decorativas
+        buildWarmCandle(group, [0.35, 0.24, 0.4], false);
+        buildWarmCandle(group, [-0.35, 0.24, 0.4], false);
+
+        // Luz calida
+        var candleLight = new THREE.PointLight(0xffaa44, 1.2, 4);
+        candleLight.position.set(0, 2.8, 0.2);
+        group.add(candleLight);
+        flames.push({
+          light: candleLight,
+          base: 1.2,
+          offset: Math.random() * Math.PI * 2,
+        });
+
+        // FLORES en la base
+        buildFlowerPatch(group, [0.55, 0.06, 0.5], 0xffc0cb);
+        buildFlowerPatch(group, [-0.55, 0.06, 0.5], 0xfff8f0);
+        buildFlowerPatch(group, [0.5, 0.06, -0.4], 0xffe0f0);
+        buildFlowerPatch(group, [-0.5, 0.06, -0.4], 0xffffff);
+
+        // HITBOX para raycasting
+        var hitGeo = new THREE.BoxGeometry(1.8, 2.8, 1.8);
+        var hitMat = new THREE.MeshBasicMaterial({ visible: false });
+        var hitbox = new THREE.Mesh(hitGeo, hitMat);
+        hitbox.position.y = 1.2;
+        hitbox.userData = { isHitbox: true, victimId: victims.indexOf(victim) };
+        group.add(hitbox);
+
+        scene.add(group);
+        return group;
+      }
+
+      function buildWarmCandle(group, pos, isMain) {
+        var x = pos[0],
+          y = pos[1],
+          z = pos[2];
+        var scale = isMain ? 1.3 : 0.8;
+
+        // Cuerpo de la vela
+        var candleBody = new THREE.Mesh(
+          new THREE.CylinderGeometry(
+            0.04 * scale,
+            0.05 * scale,
+            0.28 * scale,
+            8,
+          ),
+          new THREE.MeshStandardMaterial({
+            color: 0xfff5dc,
+            roughness: 0.7,
+            metalness: 0.0,
+          }),
+        );
+        candleBody.position.set(x, y + 0.14 * scale, z);
+        candleBody.castShadow = true;
+        group.add(candleBody);
+
+        // Llama - cono calido
+        var flameGeo = new THREE.ConeGeometry(0.035 * scale, 0.12 * scale, 6);
+        var flameMat = new THREE.MeshBasicMaterial({
+          color: 0xffbb33,
+          transparent: true,
+          opacity: 0.92,
+        });
+        var flameMesh = new THREE.Mesh(flameGeo, flameMat);
+        flameMesh.position.set(x, y + 0.34 * scale, z);
+        flameMesh.rotation.z = 0.08;
+        group.add(flameMesh);
+
+        // Halo de luz
+        var haloGeo = new THREE.SphereGeometry(0.06 * scale, 8, 8);
+        var haloMat = new THREE.MeshBasicMaterial({
+          color: 0xffe080,
+          transparent: true,
+          opacity: 0.25,
+          depthWrite: false,
+        });
+        var halo = new THREE.Mesh(haloGeo, haloMat);
+        halo.position.set(x, y + 0.34 * scale, z);
+        group.add(halo);
+      }
+
+      function buildFlowerPatch(group, pos, color) {
+        var x = pos[0],
+          y = pos[1],
+          z = pos[2];
+        var count = 3 + Math.floor(Math.random() * 4);
+
+        for (var i = 0; i < count; i++) {
+          var fx = x + (Math.random() - 0.5) * 0.25;
+          var fz = z + (Math.random() - 0.5) * 0.25;
+
+          // Tallo
+          var stem = new THREE.Mesh(
+            new THREE.CylinderGeometry(
+              0.008,
+              0.008,
+              0.15 + Math.random() * 0.1,
+              4,
+            ),
+            new THREE.MeshStandardMaterial({ color: 0x4a7a3a, roughness: 0.9 }),
+          );
+          stem.position.set(fx, y + 0.08, fz);
+          group.add(stem);
+
+          // Petalo/flor
+          var petalGeo = new THREE.SphereGeometry(
+            0.03 + Math.random() * 0.02,
+            6,
+            6,
+          );
+          var petalMat = new THREE.MeshStandardMaterial({
+            color: color,
+            roughness: 0.7,
+            emissive: color,
+            emissiveIntensity: 0.08,
+          });
+          var petal = new THREE.Mesh(petalGeo, petalMat);
+          petal.position.set(fx, y + 0.17 + Math.random() * 0.05, fz);
+          group.add(petal);
+        }
+      }
+
+      // MARIPOSAS DORADAS
+      function buildButterflies() {
+        var wingMat = new THREE.MeshBasicMaterial({
+          color: 0xffd060,
+          transparent: true,
+          opacity: 0.75,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+        });
+
+        for (var i = 0; i < 18; i++) {
+          var bGroup = new THREE.Group();
+
+          var wingGeo = new THREE.PlaneGeometry(0.18, 0.12);
+          var leftWing = new THREE.Mesh(wingGeo, wingMat.clone());
+          leftWing.material.color.setHex(
+            0xffc840 + Math.floor(Math.random() * 0x002020),
+          );
+          leftWing.position.x = -0.08;
+          leftWing.rotation.y = 0.3;
+          bGroup.add(leftWing);
+
+          var rightWing = new THREE.Mesh(wingGeo, wingMat.clone());
+          rightWing.material.color = leftWing.material.color;
+          rightWing.position.x = 0.08;
+          rightWing.rotation.y = -0.3;
+          bGroup.add(rightWing);
+
+          bGroup.position.set(
+            (Math.random() - 0.5) * 20,
+            1.5 + Math.random() * 3,
+            Math.random() * -22,
+          );
+
+          bGroup.userData = {
+            leftWing: leftWing,
+            rightWing: rightWing,
+            baseY: bGroup.position.y,
+            speed: 0.3 + Math.random() * 0.5,
+            phase: Math.random() * Math.PI * 2,
+            radius: 2 + Math.random() * 4,
+            centerX: bGroup.position.x,
+            centerZ: bGroup.position.z,
+            flapSpeed: 6 + Math.random() * 4,
+          };
+
+          scene.add(bGroup);
+          butterflies.push(bGroup);
+        }
+      }
+
+      function buildParticles() {
+        var geo = new THREE.BufferGeometry();
+        var count = 600;
+        var pos = new Float32Array(count * 3);
+        for (var i = 0; i < count; i++) {
+          pos[i * 3] = (Math.random() - 0.5) * 40;
+          pos[i * 3 + 1] = 0.2 + Math.random() * 6;
+          pos[i * 3 + 2] = Math.random() * -30;
+        }
+        geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+        var mat = new THREE.PointsMaterial({
+          color: 0xffe8a0,
+          size: 0.08,
+          transparent: true,
+          opacity: 0.55,
+          sizeAttenuation: true,
+        });
+        var pts = new THREE.Points(geo, mat);
+        scene.add(pts);
+        particles3D.push(pts);
+      }
+
+      function setupLights() {
+        // Hemisphere - cielo realista con rebote verde humedo
+        var hemi = new THREE.HemisphereLight(0xc5dcef, 0x3f603a, 0.82);
+        scene.add(hemi);
+
+        // Ambient suave y natural
+        var ambient = new THREE.AmbientLight(0xe7eef3, 0.32);
+        scene.add(ambient);
+
+        // Luz principal dorada y suave
+        var sunLight = new THREE.DirectionalLight(0xffedcf, 0.95);
+        sunLight.position.set(-15, 20, 10);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 2048;
+        sunLight.shadow.mapSize.height = 2048;
+        sunLight.shadow.camera.left = -30;
+        sunLight.shadow.camera.right = 30;
+        sunLight.shadow.camera.top = 30;
+        sunLight.shadow.camera.bottom = -30;
+        scene.add(sunLight);
+
+        // Fill frio suave desde el lado opuesto
+        var fillLight = new THREE.DirectionalLight(0xc9def2, 0.2);
+        fillLight.position.set(10, 8, -10);
+        scene.add(fillLight);
+
+        // Resplandor suave en horizonte
+        var horizonLight = new THREE.PointLight(0xd9e7f7, 0.35, 60);
+        horizonLight.position.set(0, 6, -40);
+        scene.add(horizonLight);
+      }
+
+      // CONTROLES
+      var isDragging = false;
+      var prevMouse = { x: 0, y: 0 };
+      var camTheta = 0,
+        camPhi = 0.15;
+      var camRadius = 18;
+      var targetTheta = 0,
+        targetPhi = 0.15,
+        targetRadius = 18;
+      var camTarget = new THREE.Vector3(0, 1, -4);
+
+      function setupControls() {
+        renderer.domElement.addEventListener("mousedown", function (e) {
+          isDragging = true;
+          prevMouse = { x: e.clientX, y: e.clientY };
+        });
+
+        document.addEventListener("mousemove", function (e) {
+          mouse.x = (e.clientX / innerWidth) * 2 - 1;
+          mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+
+          if (isDragging) {
+            var dx = (e.clientX - prevMouse.x) * 0.005;
+            var dy = (e.clientY - prevMouse.y) * 0.003;
+            targetTheta -= dx;
+            targetPhi = Math.max(0.05, Math.min(0.6, targetPhi - dy));
+            prevMouse = { x: e.clientX, y: e.clientY };
+          }
+        });
+
+        document.addEventListener("mouseup", function (e) {
+          if (!isDragging) return;
+          isDragging = false;
+
+          raycaster.setFromCamera(mouse, camera);
+          var hits = raycaster.intersectObjects(scene.children, true);
+          for (var hi = 0; hi < hits.length; hi++) {
+            if (hits[hi].object.userData.victimId !== undefined) {
+              selectVictim(hits[hi].object.userData.victimId);
+              break;
+            }
+          }
+        });
+
+        renderer.domElement.addEventListener("wheel", function (e) {
+          targetRadius = Math.max(
+            5,
+            Math.min(30, targetRadius + e.deltaY * 0.02),
+          );
+        });
+
+        window.addEventListener("resize", function () {
+          camera.aspect = innerWidth / innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(innerWidth, innerHeight);
+          if (composer) {
+            composer.setSize(innerWidth, innerHeight);
+          }
+          if (fxaaPass) {
+            fxaaPass.material.uniforms.resolution.value.set(
+              1 / innerWidth,
+              1 / innerHeight,
+            );
+          }
+        });
+      }
+
+      function selectVictim(id) {
+        var v = victims[id];
+        document.getElementById("victim-name").textContent = v.name;
+        document.getElementById("victim-dates").textContent =
+          v.dates + " - Samana, Caldas";
+        document.getElementById("victim-initial").textContent = v.initial;
+        document.getElementById("victim-bio").textContent = v.bio;
+        document.getElementById("offerings-count").textContent =
+          v.ofrendas + " ofrendas - " + v.mensajes + " mensajes";
+        document.getElementById("zone-name").textContent = v.zone;
+        document.getElementById("victim-panel").classList.add("open");
+
+        var m = memorials[id];
+        var p = m.position;
+        targetTheta = Math.atan2(p.x, p.z + 5);
+        targetRadius = 9;
+        camTarget.set(p.x, 1, p.z);
+
+        document.querySelectorAll(".offering-btn").forEach(function (b) {
+          b.classList.remove("placed");
+        });
+      }
+
+      // ANIMACION
+      function animate() {
+        animFrame = requestAnimationFrame(animate);
+        var t = clock.getElapsedTime();
+
+        // Suavizar camara
+        camTheta += (targetTheta - camTheta) * 0.05;
+        camPhi += (targetPhi - camPhi) * 0.05;
+        camRadius += (targetRadius - camRadius) * 0.05;
+
+        var cx =
+          camTarget.x + camRadius * Math.sin(camTheta) * Math.cos(camPhi);
+        var cy = camTarget.y + camRadius * Math.sin(camPhi) + 1;
+        var cz =
+          camTarget.z + camRadius * Math.cos(camTheta) * Math.cos(camPhi);
+
+        camera.position.set(cx, cy, cz);
+        camera.lookAt(camTarget);
+
+        // Tour automatico
+        if (isAutoTour) {
+          autoAngle += 0.003;
+          targetTheta = autoAngle;
+          if (Math.floor(autoAngle / (Math.PI * 0.8)) !== tourTarget) {
+            tourTarget = Math.floor(autoAngle / (Math.PI * 0.8));
+            var idx = tourTarget % victims.length;
+            selectVictim(idx);
+          }
+        }
+
+        // Parpadeo de llamas
+        flames.forEach(function (f) {
+          f.light.intensity =
+            f.base +
+            Math.sin(t * 8 + f.offset) * 0.35 +
+            Math.sin(t * 13 + f.offset) * 0.18;
+        });
+
+        // Particulas flotantes (polen/luciernagas)
+        particles3D.forEach(function (pts) {
+          var pos = pts.geometry.attributes.position.array;
+          for (var i = 1; i < pos.length; i += 3) {
+            pos[i] += 0.002;
+            if (pos[i] > 7) pos[i] = 0.2;
+          }
+          pts.geometry.attributes.position.needsUpdate = true;
+        });
+
+        // Mariposas doradas
+        butterflies.forEach(function (b) {
+          var d = b.userData;
+          var angle = t * d.speed + d.phase;
+          b.position.x = d.centerX + Math.sin(angle) * d.radius;
+          b.position.z = d.centerZ + Math.cos(angle) * d.radius * 0.6;
+          b.position.y = d.baseY + Math.sin(t * 1.2 + d.phase) * 0.6;
+
+          // Aleteo
+          var flapAngle = Math.sin(t * d.flapSpeed) * 0.7;
+          d.leftWing.rotation.y = 0.3 + flapAngle;
+          d.rightWing.rotation.y = -0.3 - flapAngle;
+
+          // Orientar en direccion del movimiento
+          b.rotation.y = angle + Math.PI;
+        });
+
+        // Hover highlight
+        raycaster.setFromCamera(mouse, camera);
+        var hits = raycaster.intersectObjects(scene.children, true);
+        document.body.style.cursor = "none";
+        memorials.forEach(function (m) {
+          m.children.forEach(function (c) {
+            if (c.material && c.material.emissive)
+              c.material.emissiveIntensity = 0.08;
+          });
+        });
+        for (var hi = 0; hi < hits.length; hi++) {
+          if (hits[hi].object.userData.victimId !== undefined) {
+            var m = memorials[hits[hi].object.userData.victimId];
+            m.children.forEach(function (c) {
+              if (c.material && c.material.emissive)
+                c.material.emissiveIntensity = 0.45;
+            });
+            break;
+          }
+        }
+
+        if (composer) {
+          try {
+            composer.render();
+          } catch (error) {
+            console.warn(
+              "Composer render failed, falling back to renderer:",
+              error,
+            );
+            composer = null;
+            fxaaPass = null;
+            renderer.render(scene, camera);
+          }
+        } else {
+          renderer.render(scene, camera);
+        }
+      }
+
+      // INTERACCIONES
+      function placeOffering(type) {
+        var btn = document.querySelector('[data-type="' + type + '"]');
+        btn.classList.toggle("placed");
+        var icons = {
+          candle: "Vela encendida con luz calida",
+          flower: "Rosa depositada con amor",
+          candle2: "Flor silvestre del campo",
+          cross: "Rosario colocado con fe",
+        };
+        showToast(icons[type]);
+
+        var countEl = document.getElementById("offerings-count");
+        var match = countEl.textContent.match(/(\d+) ofrendas/);
+        if (match) {
+          var n = btn.classList.contains("placed")
+            ? +match[1] + 1
+            : +match[1] - 1;
+          countEl.textContent = countEl.textContent.replace(
+            /\d+ ofrendas/,
+            n + " ofrendas",
+          );
+        }
+      }
+
+      function sendTribute() {
+        var ta = document.querySelector(".message-area textarea");
+        if (ta.value.trim()) {
+          showToast("Homenaje enviado. Gracias por recordar.");
+          ta.value = "";
+        } else {
+          showToast("Escribe un mensaje antes de enviar");
+        }
+      }
+
+      function showToast(msg) {
+        var t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(t._tid);
+        t._tid = setTimeout(function () {
+          t.classList.remove("show");
+        }, 3500);
+      }
+
+      // BOTONES HUD
+      document
+        .getElementById("btn-free")
+        .addEventListener("click", function () {
+          isAutoTour = false;
+          document.querySelectorAll(".hud-btn").forEach(function (b) {
+            b.classList.remove("active");
+          });
+          document.getElementById("btn-free").classList.add("active");
+          targetRadius = 18;
+          camTarget.set(0, 1, -4);
+          document.getElementById("victim-panel").classList.remove("open");
+        });
+
+      document
+        .getElementById("btn-search")
+        .addEventListener("click", function () {
+          var idx = Math.floor(Math.random() * victims.length);
+          selectVictim(idx);
+          document.querySelectorAll(".hud-btn").forEach(function (b) {
+            b.classList.remove("active");
+          });
+          document.getElementById("btn-search").classList.add("active");
+        });
+
+      document
+        .getElementById("btn-tour")
+        .addEventListener("click", function () {
+          isAutoTour = !isAutoTour;
+          document
+            .getElementById("btn-tour")
+            .classList.toggle("active", isAutoTour);
+          document.getElementById("btn-tour").textContent = isAutoTour
+            ? "Detener tour"
+            : "Visita guiada";
+          targetRadius = 10;
+        });
+
+      document
+        .getElementById("panel-close")
+        .addEventListener("click", function () {
+          document.getElementById("victim-panel").classList.remove("open");
+          isAutoTour = false;
+          targetRadius = 18;
+          camTarget.set(0, 1, -4);
+        });
+
+      // ENTRADA
+      document
+        .getElementById("btn-enter")
+        .addEventListener("click", function () {
+          var intro = document.getElementById("intro");
+          intro.classList.add("fade-out");
+          var hud = document.getElementById("hud");
+          setTimeout(function () {
+            intro.style.display = "none";
+            hud.classList.add("visible");
+            initThree();
+          }, 1500);
+        });
+
+      document
+        .querySelectorAll(
+          ".hud-btn, .hud-nav button, .offering-btn, .btn-tribute, .panel-close",
+        )
+        .forEach(function (el) {
+          el.addEventListener("mouseenter", function () {
+            cursor.classList.add("hovering");
+          });
+          el.addEventListener("mouseleave", function () {
+            cursor.classList.remove("hovering");
+          });
+        });
+    </script>
+  </body>
 </html>
