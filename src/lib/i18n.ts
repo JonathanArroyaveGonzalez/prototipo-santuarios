@@ -241,6 +241,7 @@ export const translations = {
       title: "Sobre el Proyecto",
       subtitle:
         "Santuarios de la Memoria: diálogos para la verdad y la reparación simbólica de las víctimas de desaparición en Samaná, Caldas",
+      heroEyebrow: "Memoria, verdad y reparación simbólica",
       contextTitle: "Contexto",
       contextText1:
         "Samaná es uno de los municipios más afectados por el conflicto armado en Caldas. Según la Unidad para la Atención y Reparación Integral a las Víctimas (2024),",
@@ -249,6 +250,10 @@ export const translations = {
       contextDisappeared: "406 son víctimas directas de desaparición forzada",
       contextText3:
         "El 85% de la población del municipio ha sido victimizada por el conflicto armado.",
+      keyFiguresTitle: "Cifras Clave",
+      keyFigureVictimsLabel: "Víctimas reconocidas",
+      keyFigureDisappearedLabel: "Víctimas directas",
+      keyFigurePopulationLabel: "Población victimizada",
       jepTitle: "Auto 073 de 2023 - JEP",
       jepText1:
         "La Jurisdicción Especial para la Paz (JEP) emitió el Auto 073 de 2023, que ordena la construcción de",
@@ -259,13 +264,22 @@ export const translations = {
       objectiveTitle: "Objetivo General",
       objectiveText:
         "Contribuir al diseño de un Santuario de Memoria en el municipio de Samaná a través del diálogo de saberes entre instituciones del Estado y organizaciones, para aportar a la memoria y dignificación de las víctimas de desaparición, y la conservación, cuidado y custodia de CNI y CINR.",
+      objectiveKicker: "Propósito del proyecto",
       teamTitle: "Equipo de Trabajo",
+      teamSubtitle:
+        "Una red interdisciplinaria entre universidad, organizaciones y procesos comunitarios que sostiene el proyecto desde la investigación y el acompañamiento territorial.",
       coordinator: "Coordinadora",
       participant: "Participante",
       external: "Externo",
+      dedicationShort: "Dedicación",
+      weeklyHours: "h/semana",
+      movice: "MOVICE",
+      fundecos: "FUNDECOS",
       faculty1: "Facultad de Ciencias Jurídicas y Sociales",
       faculty2: "Facultad de Ingeniería",
       methodologyTitle: "Metodología",
+      methodologySubtitle:
+        "La metodología se traduce en una práctica de escucha, co-diseño y transformación con presencia territorial y rigor académico.",
       methodologyText: "El proyecto usa la",
       methodologyIAP: "Investigación Acción Participativa (IAP)",
       methodologyText2:
@@ -286,6 +300,9 @@ export const translations = {
       budget: "Presupuesto",
       budgetValue: "$74.489.440",
       currency: "COP",
+      closingTitle: "Base Institucional",
+      closingSubtitle:
+        "La articulación entre academia, territorio y organizaciones sociales permite que este proyecto se convierta en una plataforma viva de memoria histórica.",
     },
   },
   en: {
@@ -527,6 +544,7 @@ export const translations = {
       title: "About the Project",
       subtitle:
         "Memory Sanctuaries: dialogues for truth and symbolic reparation of disappearance victims in Samaná, Caldas",
+      heroEyebrow: "Memory, truth, and symbolic reparation",
       contextTitle: "Context",
       contextText1:
         "Samaná is one of the municipalities most affected by the armed conflict in Caldas. According to the Unit for Comprehensive Attention and Reparation to Victims (2024),",
@@ -535,6 +553,10 @@ export const translations = {
       contextDisappeared: "406 are direct victims of forced disappearance",
       contextText3:
         "85% of the municipality's population has been victimized by the armed conflict.",
+      keyFiguresTitle: "Key Figures",
+      keyFigureVictimsLabel: "Recognized victims",
+      keyFigureDisappearedLabel: "Direct victims",
+      keyFigurePopulationLabel: "Victimized population",
       jepTitle: "Order 073 of 2023 - JEP",
       jepText1:
         "The Special Jurisdiction for Peace (JEP) issued Order 073 of 2023, which mandates the construction of",
@@ -546,13 +568,22 @@ export const translations = {
       objectiveTitle: "General Objective",
       objectiveText:
         "Contribute to the design of a Memory Sanctuary in the municipality of Samaná through the dialogue of knowledge between State institutions and organizations, to contribute to the memory and dignification of disappearance victims, and the conservation, care and custody of CNI and CINR.",
+      objectiveKicker: "Project purpose",
       teamTitle: "Work Team",
+      teamSubtitle:
+        "An interdisciplinary network between university, organizations, and community processes that sustains the project through research and territorial accompaniment.",
       coordinator: "Coordinator",
       participant: "Participant",
       external: "External",
+      dedicationShort: "Dedication",
+      weeklyHours: "hrs/week",
+      movice: "MOVICE",
+      fundecos: "FUNDECOS",
       faculty1: "Faculty of Legal and Social Sciences",
       faculty2: "Faculty of Engineering",
       methodologyTitle: "Methodology",
+      methodologySubtitle:
+        "The methodology becomes a practice of listening, co-design, and transformation with territorial presence and academic rigor.",
       methodologyText: "The project uses",
       methodologyIAP: "Participatory Action Research (PAR)",
       methodologyText2:
@@ -573,6 +604,9 @@ export const translations = {
       budget: "Budget",
       budgetValue: "$74,489,440",
       currency: "COP",
+      closingTitle: "Institutional Base",
+      closingSubtitle:
+        "The articulation between academia, territory, and social organizations allows this project to become a living platform of historical memory.",
     },
   },
 };
