@@ -10,24 +10,74 @@ export const translations = {
       testimonies: "Testimonios",
       about: "Sobre Proyecto",
       login: "Acceder",
-      dashboard: "Panel"
+      dashboard: "Panel",
+      brandTitle: "Santuarios",
+      brandLocation: "Samaná, Caldas",
+      homeAriaLabel: "Ir al inicio",
+      brandLogoAlt: "Logo Santuarios",
+      switchToEnglish: "English",
+      switchToSpanish: "Español",
+    },
+    virtualTourPage: {
+      eyebrow: "Santuario inmersivo",
+      title: "Recorrido Virtual",
+      description:
+        "Recorre un espacio contemplativo construido para honrar la memoria con pausa, recogimiento y presencia. Cada gesto dentro del entorno 3D acompana la experiencia como un acto de homenaje.",
+      openExternal: "Abrir en una pestaña independiente",
+      enterExperience: "Entrar a la experiencia",
+      guidedTitle: "Experiencia Guiada",
+      guidedDescription:
+        "Navega con calma, acercate a los memoriales y activa homenajes simbolicos dentro del espacio.",
+      recommendationTitle: "Recomendacion",
+      recommendationDescription:
+        "Para una visualizacion mas estable y envolvente, abre el recorrido en pantalla completa o en una pestaña independiente.",
+      iframeTitle: "Recorrido virtual 3D Santuarios de la Memoria",
     },
     home: {
       title: "Santuarios de la Memoria",
-      subtitle: "Diálogos para la verdad y la reparación simbólica de las víctimas de desaparición en Samaná, Caldas.",
+      subtitle:
+        "Diálogos para la verdad y la reparación simbólica de las víctimas de desaparición en Samaná, Caldas.",
+      heroTitle: "Santuario Digital",
+      heroSubtitleLine1: "Un espacio sagrado para honrar la memoria,",
+      heroSubtitleLine2: "celebrar la vida y encontrar esperanza",
       exploreVictims: "Explorar Víctimas",
       viewMap: "Ver Mapa Interactivo",
       virtualTourCta: "Entrar al Recorrido Virtual 3D",
       victimsRegistered: "Víctimas Registradas",
+      testimoniesShared: "Testimonios compartidos",
+      geoReferencedFacts: "Hechos georreferenciados",
       testimonies: "Testimonios",
       memoryPlaces: "Lugares de Memoria",
+      reflectionTitle: "Espacio de Reflexión",
+      reflectionQuote:
+        "En la memoria habita la esperanza. En la verdad, la dignidad. En el amor, la paz que sana.",
+      reflectionBody1:
+        "Este santuario digital es un lugar sagrado donde las historias viven, donde los nombres resuenan, donde la luz nunca se apaga.",
+      reflectionBody2:
+        "Cada visita es un acto de memoria. Cada recuerdo compartido es un paso hacia la verdad. Cada vela encendida es una promesa de no olvidar.",
+      reflectionClosing: "Que la memoria sea eterna.",
+      statMessageVictims:
+        "El amor de las familias que nunca abandonan la busqueda.",
+      statMessageTestimonies:
+        "La esperanza florece cuando una voz se convierte en memoria viva.",
+      statMessagePlaces:
+        "Cada lugar nombrado es un paso hacia la paz y la verdad.",
+      lightWallTitle: "Muro de Luz",
+      lightWallSubtitle:
+        "Cada vela encendida es una oración, un recuerdo, una promesa de no olvidar. La luz vence a la oscuridad del olvido.",
+      lightWallQuote:
+        "La memoria es la luz que ilumina el camino hacia la verdad",
+      memorialSpace: "Espacio conmemorativo",
+      openTributeLabel: "Abrir tributo de",
       contribute: "Contribuye a la Memoria Colectiva",
       accessSystem: "Acceder al Sistema",
       projectTitle: "Un Proyecto de Memoria y Dignidad",
       projectDesc1: "El proyecto",
       projectName: "Santuarios de la Memoria",
-      projectDesc2: "surge en respuesta al Auto 073 de 2023 de la Jurisdicción Especial para la Paz (JEP), que ordena la construcción de espacios de memoria en Samaná, Victoria, Norcasia y La Dorada.",
-      projectDesc3: "A través de la Investigación Acción Participativa (IAP), co-construimos con familias buscadoras, organizaciones sociales e instituciones del Estado un diseño que honra la memoria de las víctimas de desaparición forzada en el Magdalena Caldense.",
+      projectDesc2:
+        "surge en respuesta al Auto 073 de 2023 de la Jurisdicción Especial para la Paz (JEP), que ordena la construcción de espacios de memoria en Samaná, Victoria, Norcasia y La Dorada.",
+      projectDesc3:
+        "A través de la Investigación Acción Participativa (IAP), co-construimos con familias buscadoras, organizaciones sociales e instituciones del Estado un diseño que honra la memoria de las víctimas de desaparición forzada en el Magdalena Caldense.",
       coordination: "Coordinación",
       coordinationText: "Laura Montoya López · Universidad de Caldas",
       duration: "Duración",
@@ -35,18 +85,22 @@ export const translations = {
       population: "Población",
       populationText: "1.328 personas desaparecidas (universo UBPD)",
       learnMore: "Conocer Más del Proyecto",
-      contributeDesc: "Si tienes información sobre personas desaparecidas o deseas compartir un testimonio, tu voz es fundamental para la construcción de verdad y memoria.",
+      contributeDesc:
+        "Si tienes información sobre personas desaparecidas o deseas compartir un testimonio, tu voz es fundamental para la construcción de verdad y memoria.",
       documentsDesc: "Personas desaparecidas documentadas",
       familyDesc: "Relatos de familiares y comunidad",
       sitesDesc: "Sitios georeferenciados en el territorio",
       gardenTitle: "Jardín de las Almas",
-      gardenSubtitle: "Un collage vivo de velas y rostros para recordar. Cada luz representa una historia que permanece.",
+      gardenSubtitle:
+        "Un collage vivo de velas y rostros para recordar. Cada luz representa una historia que permanece.",
       gardenHint: "Haz clic en una vela o retrato para conocer su historia.",
       gardenModalMunicipality: "Municipio",
       gardenModalDepartment: "Departamento",
       gardenModalDisappearance: "Fecha de desaparición",
       gardenModalStatus: "Estado de búsqueda",
-      close: "Cerrar"
+      tributeModalCopy:
+        "Este espacio conserva su presencia en la memoria colectiva. Cada nombre es una historia viva que reclama verdad, dignidad y esperanza para su familia y su territorio.",
+      close: "Cerrar",
     },
     victims: {
       title: "Víctimas de Desaparición",
@@ -58,21 +112,26 @@ export const translations = {
       disappearance: "Desaparición",
       age: "Edad",
       years: "años",
-      noVictims: "No se encontraron víctimas con los filtros seleccionados"
+      noVictims: "No se encontraron víctimas con los filtros seleccionados",
     },
     map: {
       title: "Mapa Interactivo de Memoria",
+      subtitle:
+        "Georeferenciación de lugares significativos relacionados con las víctimas de desaparición en el Magdalena Caldense.",
       filterByType: "Filtrar por tipo:",
       allPlaces: "Todos los lugares",
       disappearancePoint: "Punto de desaparición",
       meetingPlace: "Lugar de encuentro",
       tributeSite: "Sitio de homenaje",
       showing: "Mostrando",
-      places: "lugares"
+      places: "lugares",
+      interactionHint: "Haz clic para interactuar con el mapa",
+      popupType: "Tipo",
     },
     events: {
       title: "Eventos de Memoria",
-      subtitle: "Agenda de actividades y acciones simbólicas registradas en el proyecto.",
+      subtitle:
+        "Agenda de actividades y acciones simbólicas registradas en el proyecto.",
       filterByCategory: "Filtrar por categoría:",
       allCategories: "Todas las categorías",
       showing: "Mostrando",
@@ -81,18 +140,20 @@ export const translations = {
       starts: "Inicia",
       ends: "Finaliza",
       noDescription: "Sin descripción disponible.",
-      empty: "No se encontraron eventos con los filtros seleccionados"
+      empty: "No se encontraron eventos con los filtros seleccionados",
     },
     footer: {
       title: "Santuarios de la Memoria",
-      description: "Preservando la memoria histórica y honrando la dignidad de las víctimas de desaparición en Samaná, Caldas.",
+      description:
+        "Preservando la memoria histórica y honrando la dignidad de las víctimas de desaparición en Samaná, Caldas.",
       contact: "Contacto",
       university: "Universidad de Caldas",
       project: "Proyecto PRY-335 (2025)",
       links: "Enlaces",
       victimsGallery: "Galería de Víctimas",
       interactiveMap: "Mapa Interactivo",
-      copyright: "© 2025 Universidad de Caldas. Proyecto PRY-335. Todos los derechos reservados."
+      copyright:
+        "© 2025 Universidad de Caldas. Proyecto PRY-335. Todos los derechos reservados.",
     },
     dashboard: {
       title: "Panel Admin",
@@ -140,23 +201,29 @@ export const translations = {
       createTestimonyBtn: "Crear Testimonio",
       creatingTestimony: "Creando testimonio...",
       testimonyCreated: "Testimonio registrado exitosamente",
-      errorCreatingTestimony: "Error al crear testimonio"
+      errorCreatingTestimony: "Error al crear testimonio",
     },
     login: {
       title: "Acceso al Sistema",
       subtitle: "Ingresa tus credenciales para continuar",
       email: "Correo electrónico",
       password: "Contraseña",
+      emailPlaceholder: "tu@email.com",
+      passwordPlaceholder: "••••••••",
       loginBtn: "Ingresar",
       loggingIn: "Ingresando...",
       forgotPassword: "¿Olvidaste tu contraseña?",
       recoverAccess: "Recuperar acceso",
       systemInfo: "Sistema de gestión de memoria · Universidad de Caldas",
-      completeFields: "Por favor completa todos los campos"
+      completeFields: "Por favor completa todos los campos",
+      connectionError: "Error de conexión",
+      invalidCredentials: "Credenciales invalidas",
+      serverError: "Error en el servidor",
     },
     testimoniesPage: {
       title: "Testimonios de Memoria",
-      subtitle: "Voces de familiares, sobrevivientes y comunidad que mantienen viva la memoria de las víctimas de desaparición.",
+      subtitle:
+        "Voces de familiares, sobrevivientes y comunidad que mantienen viva la memoria de las víctimas de desaparición.",
       filterByType: "Filtrar por tipo:",
       allTestimonies: "Todos los testimonios",
       text: "Texto",
@@ -166,25 +233,32 @@ export const translations = {
       testimonies: "testimonios",
       victim: "Víctima:",
       place: "Lugar:",
-      noTestimonies: "No se encontraron testimonios con los filtros seleccionados"
+      noTestimonies:
+        "No se encontraron testimonios con los filtros seleccionados",
     },
     about: {
       projectTag: "Proyecto PRY-335",
       title: "Sobre el Proyecto",
-      subtitle: "Santuarios de la Memoria: diálogos para la verdad y la reparación simbólica de las víctimas de desaparición en Samaná, Caldas",
+      subtitle:
+        "Santuarios de la Memoria: diálogos para la verdad y la reparación simbólica de las víctimas de desaparición en Samaná, Caldas",
       contextTitle: "Contexto",
-      contextText1: "Samaná es uno de los municipios más afectados por el conflicto armado en Caldas. Según la Unidad para la Atención y Reparación Integral a las Víctimas (2024),",
+      contextText1:
+        "Samaná es uno de los municipios más afectados por el conflicto armado en Caldas. Según la Unidad para la Atención y Reparación Integral a las Víctimas (2024),",
       contextVictims: "49.288 personas son reconocidas como víctimas",
       contextText2: "en este territorio, y aproximadamente",
       contextDisappeared: "406 son víctimas directas de desaparición forzada",
-      contextText3: "El 85% de la población del municipio ha sido victimizada por el conflicto armado.",
+      contextText3:
+        "El 85% de la población del municipio ha sido victimizada por el conflicto armado.",
       jepTitle: "Auto 073 de 2023 - JEP",
-      jepText1: "La Jurisdicción Especial para la Paz (JEP) emitió el Auto 073 de 2023, que ordena la construcción de",
+      jepText1:
+        "La Jurisdicción Especial para la Paz (JEP) emitió el Auto 073 de 2023, que ordena la construcción de",
       jepSanctuaries: "Santuarios de Memoria",
       jepText2: "en las alcaldías de Samaná, Victoria, Norcasia y La Dorada.",
-      jepText3: "Estos santuarios deben permitir la disposición, conservación, cuidado y custodia de Cuerpos No Identificados (CNI) y Cuerpos Identificados No Reclamados (CINR).",
+      jepText3:
+        "Estos santuarios deben permitir la disposición, conservación, cuidado y custodia de Cuerpos No Identificados (CNI) y Cuerpos Identificados No Reclamados (CINR).",
       objectiveTitle: "Objetivo General",
-      objectiveText: "Contribuir al diseño de un Santuario de Memoria en el municipio de Samaná a través del diálogo de saberes entre instituciones del Estado y organizaciones, para aportar a la memoria y dignificación de las víctimas de desaparición, y la conservación, cuidado y custodia de CNI y CINR.",
+      objectiveText:
+        "Contribuir al diseño de un Santuario de Memoria en el municipio de Samaná a través del diálogo de saberes entre instituciones del Estado y organizaciones, para aportar a la memoria y dignificación de las víctimas de desaparición, y la conservación, cuidado y custodia de CNI y CINR.",
       teamTitle: "Equipo de Trabajo",
       coordinator: "Coordinadora",
       participant: "Participante",
@@ -194,7 +268,8 @@ export const translations = {
       methodologyTitle: "Metodología",
       methodologyText: "El proyecto usa la",
       methodologyIAP: "Investigación Acción Participativa (IAP)",
-      methodologyText2: "como enfoque metodológico transversal, con énfasis en el diálogo de saberes entre actores comunitarios, organizativos e institucionales.",
+      methodologyText2:
+        "como enfoque metodológico transversal, con énfasis en el diálogo de saberes entre actores comunitarios, organizativos e institucionales.",
       activeParticipation: "Participación activa",
       activeParticipationDesc: "De víctimas y familias buscadoras",
       jointProduction: "Producción conjunta",
@@ -210,8 +285,8 @@ export const translations = {
       durationDates: "3 febrero - 15 diciembre 2025",
       budget: "Presupuesto",
       budgetValue: "$74.489.440",
-      currency: "COP"
-    }
+      currency: "COP",
+    },
   },
   en: {
     nav: {
@@ -224,24 +299,72 @@ export const translations = {
       testimonies: "Testimonies",
       about: "About Project",
       login: "Login",
-      dashboard: "Dashboard"
+      dashboard: "Dashboard",
+      brandTitle: "Sanctuaries",
+      brandLocation: "Samaná, Caldas",
+      homeAriaLabel: "Go to home",
+      brandLogoAlt: "Sanctuaries logo",
+      switchToEnglish: "English",
+      switchToSpanish: "Español",
+    },
+    virtualTourPage: {
+      eyebrow: "Immersive sanctuary",
+      title: "Virtual Tour",
+      description:
+        "Walk through a contemplative space created to honor memory with pause, reflection, and presence. Every gesture inside the 3D environment accompanies the experience as an act of tribute.",
+      openExternal: "Open in a separate tab",
+      enterExperience: "Enter the experience",
+      guidedTitle: "Guided Experience",
+      guidedDescription:
+        "Move calmly, approach the memorials, and activate symbolic tributes within the space.",
+      recommendationTitle: "Recommendation",
+      recommendationDescription:
+        "For a more stable and immersive viewing experience, open the tour in full screen or in a separate tab.",
+      iframeTitle: "3D virtual tour of Memory Sanctuaries",
     },
     home: {
       title: "Memory Sanctuaries",
-      subtitle: "Dialogues for truth and symbolic reparation of disappearance victims in Samaná, Caldas.",
+      subtitle:
+        "Dialogues for truth and symbolic reparation of disappearance victims in Samaná, Caldas.",
+      heroTitle: "Digital Sanctuary",
+      heroSubtitleLine1: "A sacred space to honor memory,",
+      heroSubtitleLine2: "celebrate life, and find hope",
       exploreVictims: "Explore Victims",
       viewMap: "View Interactive Map",
       virtualTourCta: "Enter the 3D Virtual Tour",
       victimsRegistered: "Registered Victims",
+      testimoniesShared: "Shared testimonies",
+      geoReferencedFacts: "Georeferenced events",
       testimonies: "Testimonies",
       memoryPlaces: "Memory Places",
+      reflectionTitle: "Reflection Space",
+      reflectionQuote:
+        "Hope lives in memory. Dignity lives in truth. In love, peace heals.",
+      reflectionBody1:
+        "This digital sanctuary is a sacred place where stories live on, where names resonate, and where the light never goes out.",
+      reflectionBody2:
+        "Each visit is an act of memory. Each shared remembrance is a step toward truth. Each lit candle is a promise not to forget.",
+      reflectionClosing: "May memory be eternal.",
+      statMessageVictims: "The love of families who never abandon the search.",
+      statMessageTestimonies:
+        "Hope blossoms when a voice becomes living memory.",
+      statMessagePlaces: "Each named place is a step toward peace and truth.",
+      lightWallTitle: "Wall of Light",
+      lightWallSubtitle:
+        "Each lit candle is a prayer, a remembrance, a promise not to forget. Light overcomes the darkness of oblivion.",
+      lightWallQuote:
+        "Memory is the light that illuminates the path toward truth",
+      memorialSpace: "Memorial space",
+      openTributeLabel: "Open tribute for",
       contribute: "Contribute to Collective Memory",
       accessSystem: "Access System",
       projectTitle: "A Project of Memory and Dignity",
       projectDesc1: "The",
       projectName: "Memory Sanctuaries",
-      projectDesc2: "project arises in response to Order 073 of 2023 from the Special Jurisdiction for Peace (JEP), which mandates the construction of memory spaces in Samaná, Victoria, Norcasia and La Dorada.",
-      projectDesc3: "Through Participatory Action Research (PAR), we co-construct with searching families, social organizations and State institutions a design that honors the memory of forced disappearance victims in Magdalena Caldense.",
+      projectDesc2:
+        "project arises in response to Order 073 of 2023 from the Special Jurisdiction for Peace (JEP), which mandates the construction of memory spaces in Samaná, Victoria, Norcasia and La Dorada.",
+      projectDesc3:
+        "Through Participatory Action Research (PAR), we co-construct with searching families, social organizations and State institutions a design that honors the memory of forced disappearance victims in Magdalena Caldense.",
       coordination: "Coordination",
       coordinationText: "Laura Montoya López · Universidad de Caldas",
       duration: "Duration",
@@ -249,18 +372,22 @@ export const translations = {
       population: "Population",
       populationText: "1,328 disappeared persons (UBPD universe)",
       learnMore: "Learn More About the Project",
-      contributeDesc: "If you have information about disappeared persons or wish to share a testimony, your voice is fundamental for the construction of truth and memory.",
+      contributeDesc:
+        "If you have information about disappeared persons or wish to share a testimony, your voice is fundamental for the construction of truth and memory.",
       documentsDesc: "Documented disappeared persons",
       familyDesc: "Stories from family members and community",
       sitesDesc: "Georeferenced sites in the territory",
       gardenTitle: "Garden of Souls",
-      gardenSubtitle: "A living collage of candles and faces to remember. Each light represents a story that remains.",
+      gardenSubtitle:
+        "A living collage of candles and faces to remember. Each light represents a story that remains.",
       gardenHint: "Click any candle or portrait to view details.",
       gardenModalMunicipality: "Municipality",
       gardenModalDepartment: "Department",
       gardenModalDisappearance: "Disappearance date",
       gardenModalStatus: "Search status",
-      close: "Close"
+      tributeModalCopy:
+        "This space preserves their presence in collective memory. Each name is a living story that calls for truth, dignity, and hope for their family and territory.",
+      close: "Close",
     },
     victims: {
       title: "Disappearance Victims",
@@ -272,21 +399,26 @@ export const translations = {
       disappearance: "Disappearance",
       age: "Age",
       years: "years",
-      noVictims: "No victims found with the selected filters"
+      noVictims: "No victims found with the selected filters",
     },
     map: {
       title: "Interactive Memory Map",
+      subtitle:
+        "Georeferencing meaningful places related to victims of disappearance in Magdalena Caldense.",
       filterByType: "Filter by type:",
       allPlaces: "All places",
       disappearancePoint: "Disappearance point",
       meetingPlace: "Meeting place",
       tributeSite: "Tribute site",
       showing: "Showing",
-      places: "places"
+      places: "places",
+      interactionHint: "Click to interact with the map",
+      popupType: "Type",
     },
     events: {
       title: "Memory Events",
-      subtitle: "Schedule of activities and symbolic actions registered by the project.",
+      subtitle:
+        "Schedule of activities and symbolic actions registered by the project.",
       filterByCategory: "Filter by category:",
       allCategories: "All categories",
       showing: "Showing",
@@ -295,18 +427,20 @@ export const translations = {
       starts: "Starts",
       ends: "Ends",
       noDescription: "No description available.",
-      empty: "No events found with the selected filters"
+      empty: "No events found with the selected filters",
     },
     footer: {
       title: "Memory Sanctuaries",
-      description: "Preserving historical memory and honoring the dignity of disappearance victims in Samaná, Caldas.",
+      description:
+        "Preserving historical memory and honoring the dignity of disappearance victims in Samaná, Caldas.",
       contact: "Contact",
       university: "Universidad de Caldas",
       project: "Project PRY-335 (2025)",
       links: "Links",
       victimsGallery: "Victims Gallery",
       interactiveMap: "Interactive Map",
-      copyright: "© 2025 Universidad de Caldas. Project PRY-335. All rights reserved."
+      copyright:
+        "© 2025 Universidad de Caldas. Project PRY-335. All rights reserved.",
     },
     dashboard: {
       title: "Admin Panel",
@@ -354,23 +488,29 @@ export const translations = {
       createTestimonyBtn: "Create Testimony",
       creatingTestimony: "Creating testimony...",
       testimonyCreated: "Testimony registered successfully",
-      errorCreatingTestimony: "Error creating testimony"
+      errorCreatingTestimony: "Error creating testimony",
     },
     login: {
       title: "System Access",
       subtitle: "Enter your credentials to continue",
       email: "Email",
       password: "Password",
+      emailPlaceholder: "you@email.com",
+      passwordPlaceholder: "••••••••",
       loginBtn: "Login",
       loggingIn: "Logging in...",
       forgotPassword: "Forgot your password?",
       recoverAccess: "Recover access",
       systemInfo: "Memory management system · Universidad de Caldas",
-      completeFields: "Please complete all fields"
+      completeFields: "Please complete all fields",
+      connectionError: "Connection error",
+      invalidCredentials: "Invalid credentials",
+      serverError: "Server error",
     },
     testimoniesPage: {
       title: "Memory Testimonies",
-      subtitle: "Voices of family members, survivors and community that keep alive the memory of disappearance victims.",
+      subtitle:
+        "Voices of family members, survivors and community that keep alive the memory of disappearance victims.",
       filterByType: "Filter by type:",
       allTestimonies: "All testimonies",
       text: "Text",
@@ -380,25 +520,32 @@ export const translations = {
       testimonies: "testimonies",
       victim: "Victim:",
       place: "Place:",
-      noTestimonies: "No testimonies found with the selected filters"
+      noTestimonies: "No testimonies found with the selected filters",
     },
     about: {
       projectTag: "Project PRY-335",
       title: "About the Project",
-      subtitle: "Memory Sanctuaries: dialogues for truth and symbolic reparation of disappearance victims in Samaná, Caldas",
+      subtitle:
+        "Memory Sanctuaries: dialogues for truth and symbolic reparation of disappearance victims in Samaná, Caldas",
       contextTitle: "Context",
-      contextText1: "Samaná is one of the municipalities most affected by the armed conflict in Caldas. According to the Unit for Comprehensive Attention and Reparation to Victims (2024),",
+      contextText1:
+        "Samaná is one of the municipalities most affected by the armed conflict in Caldas. According to the Unit for Comprehensive Attention and Reparation to Victims (2024),",
       contextVictims: "49,288 people are recognized as victims",
       contextText2: "in this territory, and approximately",
       contextDisappeared: "406 are direct victims of forced disappearance",
-      contextText3: "85% of the municipality's population has been victimized by the armed conflict.",
+      contextText3:
+        "85% of the municipality's population has been victimized by the armed conflict.",
       jepTitle: "Order 073 of 2023 - JEP",
-      jepText1: "The Special Jurisdiction for Peace (JEP) issued Order 073 of 2023, which mandates the construction of",
+      jepText1:
+        "The Special Jurisdiction for Peace (JEP) issued Order 073 of 2023, which mandates the construction of",
       jepSanctuaries: "Memory Sanctuaries",
-      jepText2: "in the municipalities of Samaná, Victoria, Norcasia and La Dorada.",
-      jepText3: "These sanctuaries must allow the disposition, conservation, care and custody of Unidentified Bodies (CNI) and Identified Unclaimed Bodies (CINR).",
+      jepText2:
+        "in the municipalities of Samaná, Victoria, Norcasia and La Dorada.",
+      jepText3:
+        "These sanctuaries must allow the disposition, conservation, care and custody of Unidentified Bodies (CNI) and Identified Unclaimed Bodies (CINR).",
       objectiveTitle: "General Objective",
-      objectiveText: "Contribute to the design of a Memory Sanctuary in the municipality of Samaná through the dialogue of knowledge between State institutions and organizations, to contribute to the memory and dignification of disappearance victims, and the conservation, care and custody of CNI and CINR.",
+      objectiveText:
+        "Contribute to the design of a Memory Sanctuary in the municipality of Samaná through the dialogue of knowledge between State institutions and organizations, to contribute to the memory and dignification of disappearance victims, and the conservation, care and custody of CNI and CINR.",
       teamTitle: "Work Team",
       coordinator: "Coordinator",
       participant: "Participant",
@@ -408,7 +555,8 @@ export const translations = {
       methodologyTitle: "Methodology",
       methodologyText: "The project uses",
       methodologyIAP: "Participatory Action Research (PAR)",
-      methodologyText2: "as a transversal methodological approach, with emphasis on the dialogue of knowledge between community, organizational and institutional actors.",
+      methodologyText2:
+        "as a transversal methodological approach, with emphasis on the dialogue of knowledge between community, organizational and institutional actors.",
       activeParticipation: "Active participation",
       activeParticipationDesc: "Of victims and searching families",
       jointProduction: "Joint production",
@@ -424,9 +572,9 @@ export const translations = {
       durationDates: "February 3 - December 15, 2025",
       budget: "Budget",
       budgetValue: "$74,489,440",
-      currency: "COP"
-    }
-  }
+      currency: "COP",
+    },
+  },
 };
 
 export type Language = keyof typeof translations;

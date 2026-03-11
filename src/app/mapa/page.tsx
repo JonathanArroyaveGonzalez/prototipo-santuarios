@@ -8,20 +8,19 @@ import { useLanguage } from "@/lib/language-context";
 
 const MapContainer = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
-  { ssr: false }
+  { ssr: false },
 );
 const TileLayer = dynamic(
   () => import("react-leaflet").then((mod) => mod.TileLayer),
-  { ssr: false }
+  { ssr: false },
 );
 const Marker = dynamic(
   () => import("react-leaflet").then((mod) => mod.Marker),
-  { ssr: false }
+  { ssr: false },
 );
-const Popup = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Popup),
-  { ssr: false }
-);
+const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), {
+  ssr: false,
+});
 
 export default function MapaPage() {
   const [lugares, setLugares] = useState<Lugar[]>([]);
@@ -35,7 +34,7 @@ export default function MapaPage() {
     fetch("/api/lugares")
       .then((r) => r.json())
       .then(setLugares);
-    
+
     // Create map icons only on client-side
     if (typeof window !== "undefined") {
       setMapIcons(createMapIcons());
@@ -61,13 +60,8 @@ export default function MapaPage() {
     <div className="min-h-screen">
       <main className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-8">
         <section className="hero-appear surface-panel rounded-3xl p-8">
-          <h1 className="section-title text-4xl sm:text-5xl">
-            {t.map.title}
-          </h1>
-          <p className="text-soft mt-4 max-w-3xl text-lg">
-            Georeferenciación de lugares significativos relacionados con las víctimas 
-            de desaparición en el Magdalena Caldense.
-          </p>
+          <h1 className="section-title text-4xl sm:text-5xl">{t.map.title}</h1>
+          <p className="text-soft mt-4 max-w-3xl text-lg">{t.map.subtitle}</p>
         </section>
 
         <section className="mt-8 surface-panel rounded-2xl p-6">
@@ -79,7 +73,9 @@ export default function MapaPage() {
               className="rounded-xl border border-[var(--line)] bg-white px-4 py-2 text-sm"
             >
               <option value="">{t.map.allPlaces}</option>
-              <option value="punto_desaparicion">{t.map.disappearancePoint}</option>
+              <option value="punto_desaparicion">
+                {t.map.disappearancePoint}
+              </option>
               <option value="encuentro">{t.map.meetingPlace}</option>
               <option value="homenaje">{t.map.tributeSite}</option>
             </select>
@@ -89,7 +85,7 @@ export default function MapaPage() {
           </div>
         </section>
 
-        <section 
+        <section
           className="mt-8 surface-panel rounded-2xl p-2 h-[600px] relative z-0"
           onMouseEnter={() => setMapFocused(true)}
           onMouseLeave={() => setMapFocused(false)}
@@ -97,7 +93,7 @@ export default function MapaPage() {
           {!mapFocused && (
             <div className="absolute inset-0 z-[1] flex items-center justify-center pointer-events-none">
               <div className="bg-black/50 text-white px-4 py-2 rounded-lg text-sm">
-                {language === "es" ? "Haz clic para interactuar con el mapa" : "Click to interact with the map"}
+                {t.map.interactionHint}
               </div>
             </div>
           )}
@@ -107,7 +103,13 @@ export default function MapaPage() {
               zoom={10}
               scrollWheelZoom={false}
               ref={mapRef}
-              style={{ height: "100%", width: "100%", borderRadius: "12px", position: "relative", zIndex: 0 }}
+              style={{
+                height: "100%",
+                width: "100%",
+                borderRadius: "12px",
+                position: "relative",
+                zIndex: 0,
+              }}
             >
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -125,7 +127,7 @@ export default function MapaPage() {
                         {lugar.nombre}
                       </h3>
                       <p className="text-soft text-sm mt-1">
-                        Tipo: {lugar.tipo}
+                        {t.map.popupType}: {lugar.tipo}
                       </p>
                     </div>
                   </Popup>
@@ -139,7 +141,9 @@ export default function MapaPage() {
           <div className="rounded-xl border border-[var(--line)] bg-white p-4">
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-red-500" />
-              <span className="text-sm font-medium">{t.map.disappearancePoint}</span>
+              <span className="text-sm font-medium">
+                {t.map.disappearancePoint}
+              </span>
             </div>
           </div>
           <div className="rounded-xl border border-[var(--line)] bg-white p-4">

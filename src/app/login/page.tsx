@@ -30,7 +30,13 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.message || t.login.completeFields);
+        if (response.status === 400) {
+          setError(t.login.completeFields);
+        } else if (response.status === 401) {
+          setError(t.login.invalidCredentials);
+        } else {
+          setError(t.login.serverError);
+        }
         setLoading(false);
         return;
       }
@@ -39,7 +45,7 @@ export default function LoginPage() {
       sessionStorage.setItem("user", JSON.stringify(data.user));
       router.push("/dashboard");
     } catch (err) {
-      setError("Error de conexión");
+      setError(t.login.connectionError);
       setLoading(false);
     }
   }
@@ -60,7 +66,10 @@ export default function LoginPage() {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium mb-2">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium mb-2"
+                  >
                     {t.login.email}
                   </label>
                   <input
@@ -69,13 +78,16 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full rounded-xl border border-[var(--line)] bg-white px-4 py-2"
-                    placeholder="tu@email.com"
+                    placeholder={t.login.emailPlaceholder}
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium mb-2">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium mb-2"
+                  >
                     {t.login.password}
                   </label>
                   <input
@@ -84,7 +96,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full rounded-xl border border-[var(--line)] bg-white px-4 py-2"
-                    placeholder="••••••••"
+                    placeholder={t.login.passwordPlaceholder}
                     required
                   />
                 </div>
@@ -117,9 +129,7 @@ export default function LoginPage() {
           </Card>
 
           <div className="mt-6 text-center">
-            <p className="text-soft text-sm">
-              {t.login.systemInfo}
-            </p>
+            <p className="text-soft text-sm">{t.login.systemInfo}</p>
           </div>
         </div>
       </div>

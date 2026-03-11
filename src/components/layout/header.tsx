@@ -57,11 +57,11 @@ export function Header() {
             <Link
               href="/"
               className="inline-flex h-11 w-11 items-center justify-center sm:h-12 sm:w-12"
-              aria-label="Ir al inicio"
+              aria-label={t.nav.homeAriaLabel}
             >
               <Image
                 src="/Logo-cropped.png"
-                alt="Logo Santuarios"
+                alt={t.nav.brandLogoAlt}
                 width={48}
                 height={48}
                 className="h-full w-full object-contain"
@@ -75,10 +75,10 @@ export function Header() {
                 className="flex items-baseline gap-2 border-r border-white/20 pr-4"
               >
                 <h1 className="font-serif text-lg leading-none tracking-[0.02em] text-[#f5efe3] xl:text-xl">
-                  Santuarios
+                  {t.nav.brandTitle}
                 </h1>
                 <p className="text-[10px] uppercase leading-none tracking-[0.2em] text-[#d5c6b0]/90">
-                  Samaná, Caldas
+                  {t.nav.brandLocation}
                 </p>
               </Link>
 
@@ -139,10 +139,10 @@ export function Header() {
         <div className="pb-2 lg:hidden">
           <Link href="/" className="block text-center">
             <h1 className="font-serif text-base leading-none tracking-[0.02em] text-[#f5efe3] sm:text-lg">
-              Santuarios
+              {t.nav.brandTitle}
             </h1>
             <p className="mt-1 text-[10px] uppercase leading-none tracking-[0.2em] text-[#d5c6b0]/90">
-              Samaná, Caldas
+              {t.nav.brandLocation}
             </p>
           </Link>
         </div>
@@ -172,7 +172,9 @@ export function Header() {
               className="w-full text-left px-3 py-2 text-base font-medium text-white/90 hover:bg-white/10 hover:text-[#B2916F] transition-colors flex items-center gap-2"
             >
               <Globe className="h-4 w-4" />
-              {language === "es" ? "English" : "Español"}
+              {language === "es"
+                ? t.nav.switchToEnglish
+                : t.nav.switchToSpanish}
             </button>
             <Link
               href={isAuthenticated ? "/dashboard" : "/login"}

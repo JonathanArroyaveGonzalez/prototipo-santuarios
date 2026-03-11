@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useLanguage } from "@/lib/language-context";
 
 const HERO_FLOATING_ORBS = [
   { left: "5%", delay: "0s", duration: "11.2s", size: 12 },
@@ -16,6 +19,8 @@ const HERO_FLOATING_ORBS = [
 ];
 
 export default function RecorridoVirtualPage() {
+  const { t } = useLanguage();
+
   return (
     <main className="min-h-screen bg-[#f3eee3] pb-10">
       <section className="relative isolate min-h-screen overflow-hidden">
@@ -64,15 +69,13 @@ export default function RecorridoVirtualPage() {
           <div className="flex flex-1 items-start justify-center pt-[16vh] text-center sm:pt-[18vh]">
             <div className="max-w-4xl">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.34em] text-[#EAD7B8] sm:text-xs">
-                Santuario inmersivo
+                {t.virtualTourPage.eyebrow}
               </p>
               <h1 className="mt-5 font-serif text-5xl leading-[0.95] text-[#FDFCF0] sm:text-6xl lg:text-7xl">
-                Recorrido Virtual
+                {t.virtualTourPage.title}
               </h1>
               <p className="mx-auto mt-6 max-w-3xl text-sm leading-relaxed text-[#FDFCF0]/88 sm:text-base lg:text-xl">
-                Recorre un espacio contemplativo construido para honrar la
-                memoria con pausa, recogimiento y presencia. Cada gesto dentro
-                del entorno 3D acompana la experiencia como un acto de homenaje.
+                {t.virtualTourPage.description}
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
@@ -81,13 +84,13 @@ export default function RecorridoVirtualPage() {
                   target="_blank"
                   className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#d8bf90] bg-transparent px-5 text-sm font-medium text-[#FDFCF0] transition duration-300 hover:bg-[#b2916f] hover:text-white sm:px-6"
                 >
-                  Abrir en una pestaña independiente
+                  {t.virtualTourPage.openExternal}
                 </Link>
                 <a
                   href="#visita-3d"
                   className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#d8bf90] bg-transparent px-5 text-sm font-medium text-[#FDFCF0] transition duration-300 hover:bg-[#b2916f] hover:text-white sm:px-6"
                 >
-                  Entrar a la experiencia
+                  {t.virtualTourPage.enterExperience}
                 </a>
               </div>
             </div>
@@ -100,21 +103,19 @@ export default function RecorridoVirtualPage() {
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-[22px] border border-[#e6d7bf] bg-white/42 px-4 py-4 backdrop-blur-md sm:px-5">
               <p className="font-serif text-base font-semibold text-[#2e4739]">
-                Experiencia Guiada
+                {t.virtualTourPage.guidedTitle}
               </p>
               <p className="mt-2 text-sm leading-relaxed text-[#52655a]">
-                Navega con calma, acercate a los memoriales y activa homenajes
-                simbolicos dentro del espacio.
+                {t.virtualTourPage.guidedDescription}
               </p>
             </div>
 
             <div className="rounded-[22px] border border-[#e6d7bf] bg-white/42 px-4 py-4 backdrop-blur-md sm:px-5">
               <p className="font-serif text-base font-semibold text-[#2e4739]">
-                Recomendacion
+                {t.virtualTourPage.recommendationTitle}
               </p>
               <p className="mt-2 text-sm leading-relaxed text-[#52655a]">
-                Para una visualizacion mas estable y envolvente, abre el
-                recorrido en pantalla completa o en una pestaña independiente.
+                {t.virtualTourPage.recommendationDescription}
               </p>
             </div>
           </div>
@@ -126,7 +127,7 @@ export default function RecorridoVirtualPage() {
           <iframe
             id="visita-3d"
             src="/recorrido-virtual/index.html"
-            title="Recorrido virtual 3D Santuarios de la Memoria"
+            title={t.virtualTourPage.iframeTitle}
             className="h-[78vh] w-full lg:h-[82vh]"
             loading="lazy"
             allow="fullscreen"

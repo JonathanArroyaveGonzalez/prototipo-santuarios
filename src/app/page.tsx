@@ -313,13 +313,13 @@ export default function Home() {
         <div className="absolute inset-0 z-10 flex items-center justify-center px-4 text-center">
           <div className="mx-auto max-w-4xl">
             <h1 className="memorial-hero-title text-4xl leading-tight sm:text-6xl">
-              Santuario Digital
+              {t.home.heroTitle}
             </h1>
 
             <p className="memorial-hero-subtitle mx-auto mt-5 max-w-3xl text-base leading-relaxed sm:text-xl">
-              Un espacio sagrado para honrar la memoria,
+              {t.home.heroSubtitleLine1}
               <br className="hidden sm:block" />
-              celebrar la vida y encontrar esperanza
+              {t.home.heroSubtitleLine2}
             </p>
 
             <div className="home-light-wall" aria-hidden="true">
@@ -358,21 +358,11 @@ export default function Home() {
         <section data-reveal className="mt-12">
           <div className="meaning-layout w-full rounded-3xl">
             <aside className="reflection-card reflection-card-light">
-              <h3 className="reflection-title">Espacio de Reflexión</h3>
-              <p className="reflection-highlight">
-                "En la memoria habita la esperanza. En la verdad, la dignidad.
-                En el amor, la paz que sana."
-              </p>
-              <p>
-                Este santuario digital es un lugar sagrado donde las historias
-                viven, donde los nombres resuenan, donde la luz nunca se apaga.
-              </p>
-              <p>
-                Cada visita es un acto de memoria. Cada recuerdo compartido es
-                un paso hacia la verdad. Cada vela encendida es una promesa de
-                no olvidar.
-              </p>
-              <p className="reflection-closing">Que la memoria sea eterna.</p>
+              <h3 className="reflection-title">{t.home.reflectionTitle}</h3>
+              <p className="reflection-highlight">"{t.home.reflectionQuote}"</p>
+              <p>{t.home.reflectionBody1}</p>
+              <p>{t.home.reflectionBody2}</p>
+              <p className="reflection-closing">{t.home.reflectionClosing}</p>
             </aside>
 
             <section className="meaning-stats w-full rounded-3xl p-6 sm:p-10">
@@ -381,7 +371,9 @@ export default function Home() {
                   <div className="meaning-stat-icon-wrap">
                     <Heart className="h-6 w-6" fill="currentColor" />
                   </div>
-                  <p className="meaning-stat-label">Victimas registradas</p>
+                  <p className="meaning-stat-label">
+                    {t.home.victimsRegistered}
+                  </p>
                   <p className="meaning-stat-number">
                     <AnimatedCount value={stats.victimas} />
                   </p>
@@ -394,7 +386,7 @@ export default function Home() {
                         : "translateY(4px)",
                     }}
                   >
-                    El amor de las familias que nunca abandonan la busqueda.
+                    {t.home.statMessageVictims}
                   </p>
                 </article>
 
@@ -402,7 +394,9 @@ export default function Home() {
                   <div className="meaning-stat-icon-wrap">
                     <Flower2 className="h-6 w-6" />
                   </div>
-                  <p className="meaning-stat-label">Testimonios compartidos</p>
+                  <p className="meaning-stat-label">
+                    {t.home.testimoniesShared}
+                  </p>
                   <p className="meaning-stat-number">
                     <AnimatedCount value={stats.testimonios} />
                   </p>
@@ -415,8 +409,7 @@ export default function Home() {
                         : "translateY(4px)",
                     }}
                   >
-                    La esperanza florece cuando una voz se convierte en memoria
-                    viva.
+                    {t.home.statMessageTestimonies}
                   </p>
                 </article>
 
@@ -424,7 +417,9 @@ export default function Home() {
                   <div className="meaning-stat-icon-wrap">
                     <Flame className="h-6 w-6" />
                   </div>
-                  <p className="meaning-stat-label">Hechos georreferenciados</p>
+                  <p className="meaning-stat-label">
+                    {t.home.geoReferencedFacts}
+                  </p>
                   <p className="meaning-stat-number">
                     <AnimatedCount value={stats.lugares} />
                   </p>
@@ -437,7 +432,7 @@ export default function Home() {
                         : "translateY(4px)",
                     }}
                   >
-                    Cada lugar nombrado es un paso hacia la paz y la verdad.
+                    {t.home.statMessagePlaces}
                   </p>
                 </article>
               </div>
@@ -457,11 +452,10 @@ export default function Home() {
                 ◌
               </div>
               <h2 className="light-wall-title text-4xl sm:text-5xl">
-                Muro de Luz
+                {t.home.lightWallTitle}
               </h2>
               <p className="light-wall-subtitle mx-auto mt-4 max-w-3xl text-base sm:text-lg">
-                Cada vela encendida es una oración, un recuerdo, una promesa de
-                no olvidar. La luz vence a la oscuridad del olvido.
+                {t.home.lightWallSubtitle}
               </p>
             </div>
 
@@ -469,7 +463,7 @@ export default function Home() {
               {wallTiles.map((victim, idx) => {
                 const fullName = victim
                   ? `${victim.nombres} ${victim.apellidos}`
-                  : "Espacio conmemorativo";
+                  : t.home.memorialSpace;
                 const candleDuration = 1.2 + (idx % 9) * 0.22;
                 const candleDelay = (idx % 17) * 0.09;
 
@@ -480,7 +474,7 @@ export default function Home() {
                     onClick={() => victim && setSelectedVictim(victim)}
                     className={`soul-tile ${victim ? "" : "is-empty"}`}
                     disabled={!victim}
-                    aria-label={`Abrir tributo de ${fullName}`}
+                    aria-label={`${t.home.openTributeLabel} ${fullName}`}
                     whileHover={victim ? { y: -2, scale: 1.08 } : undefined}
                     transition={{ duration: 0.18, ease: "easeOut" }}
                   >
@@ -510,9 +504,7 @@ export default function Home() {
               })}
             </div>
 
-            <p className="light-wall-quote mt-10">
-              "La memoria es la luz que ilumina el camino hacia la verdad"
-            </p>
+            <p className="light-wall-quote mt-10">"{t.home.lightWallQuote}"</p>
           </div>
         </div>
       </section>
@@ -637,9 +629,7 @@ export default function Home() {
               </div>
 
               <p className="tribute-modal-copy mt-7">
-                Este espacio conserva su presencia en la memoria colectiva. Cada
-                nombre es una historia viva que reclama verdad, dignidad y
-                esperanza para su familia y su territorio.
+                {t.home.tributeModalCopy}
               </p>
             </div>
           </div>
