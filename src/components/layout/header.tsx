@@ -1,10 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/language-context";
-import { Globe, Heart, Menu, X } from "lucide-react";
+import { Globe, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -55,10 +56,17 @@ export function Header() {
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#B2916F] to-[#9a7d5f] shadow-md ring-1 ring-white/20 sm:h-9 sm:w-9"
+              className="inline-flex h-11 w-11 items-center justify-center sm:h-12 sm:w-12"
               aria-label="Ir al inicio"
             >
-              <Heart className="h-5 w-5 text-white" fill="currentColor" />
+              <Image
+                src="/Logo-cropped.png"
+                alt="Logo Santuarios"
+                width={48}
+                height={48}
+                className="h-full w-full object-contain"
+                priority
+              />
             </Link>
 
             <div className="hidden lg:flex lg:min-w-0 lg:items-center lg:gap-4">
